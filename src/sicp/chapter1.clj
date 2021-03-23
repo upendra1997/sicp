@@ -686,3 +686,18 @@
 
 ;; amount of times p is called is 5
 ;; order of space is o(1) and order of steps is O(log_3(a)) => O(log(a))
+
+(defn expt [b n] (if (= n 0)
+                   1
+                   (* b (expt b (- n 1)))))
+
+(defn expt-iter [b counter product] (if (= counter 0)
+                                      product (expt-iter b
+                                                         (- counter 1) (* b product))))
+
+(defn expt [b n] (expt-iter b n 1))
+
+(defn fast-expt [b n] (cond (= n 0) 1
+                            (even? n) (square (fast-expt b (/ n 2)))
+                            :else (* b (fast-expt b (- n 1)))))
+ 
