@@ -259,12 +259,12 @@
           (= kinds-of-coins 4) 25
           (= kinds-of-coins 5) 50))
   (defn ^:dynamic cc [amount kinds-of-coins] (cond
-                                     (= amount 0) 1
-                                     (or (< amount 0) (= kinds-of-coins 0)) 0
-                                     :else (+ (cc amount
-                                                  (- kinds-of-coins 1)) (cc (- amount
-                                                                               (first-denomination kinds-of-coins))
-                                                                            kinds-of-coins))))
+                                               (= amount 0) 1
+                                               (or (< amount 0) (= kinds-of-coins 0)) 0
+                                               :else (+ (cc amount
+                                                            (- kinds-of-coins 1)) (cc (- amount
+                                                                                         (first-denomination kinds-of-coins))
+                                                                                      kinds-of-coins))))
 
   (cc amount 5))
 
@@ -659,4 +659,30 @@
 ;; sicp.core=> 
 
 
-;; this shows that space usage is o(amount)
+;; this shows that space usage is O(amount) and number of steps seems to be O(n^5)
+
+;; excerise 1.15
+(defn cube [x] (* x x x))
+(defn ^:dynamic p [x] (- (* 3 x) (* 4 (cube x))))
+(defn sine [angle]
+  (if (not (> (abs angle) 0.1)) angle
+      (p (sine (/ angle 3.0)))))
+
+;; sicp.core=> (require 'clojure.tools.trace)
+;; nil
+;; sicp.core=> (clojure.tools.trace/dotrace [p] (sine 12.15))
+;; TRACE t2353: (p 0.049999999999999996)
+;; TRACE t2353: => 0.1495
+;; TRACE t2354: (p 0.1495)
+;; TRACE t2354: => 0.4351345505
+;; TRACE t2355: (p 0.4351345505)
+;; TRACE t2355: => 0.9758465331678772
+;; TRACE t2356: (p 0.9758465331678772)
+;; TRACE t2356: => -0.7895631144708228
+;; TRACE t2357: (p -0.7895631144708228)
+;; TRACE t2357: => -0.39980345741334
+;; -0.39980345741334
+;; sicp.core=> 
+
+;; amount of times p is called is 5
+;; order of space is o(1) and order of steps is O(log_3(a)) => O(log(a))
