@@ -82,8 +82,8 @@
 
 ;; 1.2
 (def result1_2 (/
-                (+ 5 4 (- 2 3 (+ 6 (/ 4 5))))
-                (* 3 (- 6 2) (- 2 7))))
+                 (+ 5 4 (- 2 3 (+ 6 (/ 4 5))))
+                 (* 3 (- 6 2) (- 2 7))))
 
 ;; sicp.core=> result1_2
 ;; -1/50
@@ -222,7 +222,7 @@
 ;; sicp.core=>       (A 3 3)
 ;; 65536
 
-(defn f [n] (A 0 n)) ;; $$ f(n) = 2y $$
+(defn f [n] (A 0 n))                                        ;; $$ f(n) = 2y $$
 (defn g [n] (A 1 n))
 ;; (A 0 (A 1 (- n 1)))
 ;; (A 0 (A 0 (A 1 (- n 1 1)))) 
@@ -239,7 +239,7 @@
 ;; $$ h(n) = 2^{2^{2^{2^{2^{2^2...n}}}}} $$
 ;; also called tetrations
 ;; $$ h(n) = {^{n}2} $$
-(defn k [n] (* 5 n n)) ;; $$k(n) = 5n^2$$
+(defn k [n] (* 5 n n))                                      ;; $$k(n) = 5n^2$$
 
 
 (defn fib-recur [n] (cond
@@ -275,9 +275,9 @@
 (defn f-recur [n] (cond
                     (< n 3) n
                     :else (+
-                           (f-recur (- n 1))
-                           (* 2 (f-recur (- n 2)))
-                           (* 3 (f-recur (- n 3))))))
+                            (f-recur (- n 1))
+                            (* 2 (f-recur (- n 2)))
+                            (* 3 (f-recur (- n 3))))))
 
 (defn f-iter ([n] (f-iter 0 1 2 n))
   ([a b c n] (cond
@@ -291,8 +291,8 @@
                                         (= position 1) 1
                                         (= position line) 1
                                         :else (+
-                                               (pascal-triangle (- line 1) (- position 1))
-                                               (pascal-triangle (- line 1) position))))
+                                                (pascal-triangle (- line 1) (- position 1))
+                                                (pascal-triangle (- line 1) position))))
 
 ;; 1.13 use markdown with latex support to view the proof:
 ;; prove that $Fib(n)$ is closest integer to $\varphi^n/\sqrt{5}$, where $\varphi=(1+\sqrt{5})/2$  
@@ -666,7 +666,7 @@
 (defn ^:dynamic p [x] (- (* 3 x) (* 4 (cube x))))
 (defn sine [angle]
   (if (not (> (abs angle) 0.1)) angle
-      (p (sine (/ angle 3.0)))))
+                                (p (sine (/ angle 3.0)))))
 
 ;; sicp.core=> (require 'clojure.tools.trace)
 ;; nil
@@ -708,3 +708,13 @@
                                            (even? n) (recur (*' b b) (quot n 2) a)
                                            :else (recur (*' b b) (quot n 2) (*' a b))))
   (fast-expt-iter b n 1N))
+
+;; exercise 1.17
+(defn doubleN [x] (* x 2))
+(defn halveN [x] (quot x 2))
+(defn ^:dynamic fast-mul [a b] (cond
+                                 (> a b) (fast-mul b a)
+                                 (or (= a 0) (= b 0)) 0
+                                 (= a 1) b
+                                 (even? a) (fast-mul (halveN a) (doubleN b))
+                                 :else (+ b (fast-mul (halveN a) (doubleN b)))))
