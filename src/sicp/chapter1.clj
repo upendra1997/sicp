@@ -248,8 +248,8 @@
                       :else (+ (fib-recur (- n 1)) (fib-recur (- n 2)))))
 
 (defn fib [n]
-  (defn fib-iter [a b count] (if (= count 0) b (fib-iter (+ a b) a (- count 1))))
-  (fib-iter 1 0 n))
+  (defn fib-iter [a b count] (if (= count 0N) b (recur (+' a b) a (-' count 1N))))
+  (fib-iter 1N 0N n))
 
 (defn ^:dynamic count-change [amount]
   (defn ^:dynamic first-denomination [kinds-of-coins]
@@ -700,4 +700,11 @@
 (defn fast-expt [b n] (cond (= n 0) 1
                             (even? n) (square (fast-expt b (/ n 2)))
                             :else (* b (fast-expt b (- n 1)))))
- 
+;; exercise 1.16
+(defn fast-expt [b n]
+  (defn ^:dynamic fast-expt-iter [b n a] (cond
+                                           (= n 0) a
+                                           (= n 1) (*' a b)
+                                           (even? n) (recur (*' b b) (quot n 2) a)
+                                           :else (recur (*' b b) (quot n 2) (*' a b))))
+  (fast-expt-iter b n 1N))
