@@ -710,11 +710,22 @@
   (fast-expt-iter b n 1N))
 
 ;; exercise 1.17
-(defn doubleN [x] (* x 2))
-(defn halveN [x] (quot x 2))
+(defn doubleN [x] (*' x 2N))
+(defn halveN [x] (quot x 2N))
 (defn ^:dynamic fast-mul [a b] (cond
                                  (> a b) (fast-mul b a)
                                  (or (= a 0) (= b 0)) 0
                                  (= a 1) b
                                  (even? a) (fast-mul (halveN a) (doubleN b))
-                                 :else (+ b (fast-mul (halveN a) (doubleN b)))))
+                                 :else (+' b (fast-mul (halveN a) (doubleN b)))))
+
+;; exercise 1.18
+(defn ^:dynamic fast-mul ([a b] (fast-mul a b 0N))
+  ([a b c] (cond
+             (> a b) (fast-mul b a c)
+             (or (= a 0) (= b 0)) c
+             (= a 1) (+' b c)
+             (even? a) (recur (halveN a) (doubleN b) c)
+             :else (recur (halveN a) (doubleN b) (+' c b))
+             ))
+  )
