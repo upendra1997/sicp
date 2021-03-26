@@ -82,8 +82,8 @@
 
 ;; 1.2
 (def result1_2 (/
-                 (+ 5 4 (- 2 3 (+ 6 (/ 4 5))))
-                 (* 3 (- 6 2) (- 2 7))))
+                (+ 5 4 (- 2 3 (+ 6 (/ 4 5))))
+                (* 3 (- 6 2) (- 2 7))))
 
 ;; sicp.core=> result1_2
 ;; -1/50
@@ -275,9 +275,9 @@
 (defn f-recur [n] (cond
                     (< n 3) n
                     :else (+
-                            (f-recur (- n 1))
-                            (* 2 (f-recur (- n 2)))
-                            (* 3 (f-recur (- n 3))))))
+                           (f-recur (- n 1))
+                           (* 2 (f-recur (- n 2)))
+                           (* 3 (f-recur (- n 3))))))
 
 (defn f-iter ([n] (f-iter 0 1 2 n))
   ([a b c n] (cond
@@ -291,8 +291,8 @@
                                         (= position 1) 1
                                         (= position line) 1
                                         :else (+
-                                                (pascal-triangle (- line 1) (- position 1))
-                                                (pascal-triangle (- line 1) position))))
+                                               (pascal-triangle (- line 1) (- position 1))
+                                               (pascal-triangle (- line 1) position))))
 
 ;; 1.13 use markdown with latex support to view the proof:
 ;; prove that $Fib(n)$ is closest integer to $\varphi^n/\sqrt{5}$, where $\varphi=(1+\sqrt{5})/2$  
@@ -666,7 +666,7 @@
 (defn ^:dynamic p [x] (- (* 3 x) (* 4 (cube x))))
 (defn sine [angle]
   (if (not (> (abs angle) 0.1)) angle
-                                (p (sine (/ angle 3.0)))))
+      (p (sine (/ angle 3.0)))))
 
 ;; sicp.core=> (require 'clojure.tools.trace)
 ;; nil
@@ -726,6 +726,84 @@
              (or (= a 0) (= b 0)) c
              (= a 1) (+' b c)
              (even? a) (recur (halveN a) (doubleN b) c)
-             :else (recur (halveN a) (doubleN b) (+' c b))
-             ))
-  )
+             :else (recur (halveN a) (doubleN b) (+' c b)))))
+
+;; exercise 1.19
+
+(defn ^:dynamic fib-iter [a b p q count] (cond (= count 0) b
+                                               (even? count) (recur a
+                                                                    b
+                                                                    (+' (*' p p) (*' q q))
+                                                                    (+' (*' q q) (*' 2 p q))
+                                                                    (quot count 2))
+                                               :else (recur (+' (*' b q) (*' a q) (*' a p))
+                                                            (+' (*' b p) (*' a q))
+                                                            p
+                                                            q
+                                                            (-' count 1N))))
+(defn fib [n] (fib-iter 1N 0N 0N 1N n))
+
+;; transformation $T_{pq}$ is
+;; $$a \larr bq + aq + ap$$  
+;; $$b \larr bp + aq$$
+;; Let $p=0$ and $q=1$ 
+;; $$ a \larr a + b$$
+;; $$ b \larr a $$
+;; This is what happens in the fib's iteraive algorithm.  
+;; lets apply transformation $T_{pq}$ twice to get $T_{p'q'}$  
+;; iteration 0
+;; $$ a_1 \larr b_0q + a_0q + a_0p $$
+;; $$ b_1 \larr b_0p + a_0q$$
+;; iteration 2  
+;; For transformations on a
+;; $$ a_2 \larr b_1q + a_1q + a_1p $$
+;; $$ a_2 \larr (b_0p + a_0q).q + (b_0q + a_0q + a_0p).q + (b_0q + a_0q + a_0p).p $$
+;; $$ a_2 \larr b_0pq + a_0qq + b_0qq + a_0qq + a_0pq + b_0pq + a_0pq + a_0pp $$
+;; $$ a_2 \larr b_0pq + b_0qq + b_0pq + a_0qq + a_0qq + a_0pq + a_0pq + a_0pp $$
+;; $$ a_2 \larr b_0.(q^2 + 2pq) + a_0.(q^2 + 2pq + q^2 + p^2) $$
+;; $$ a_2 \larr b_0.(q^2 + 2pq) + a_0.(q^2 + 2pq) + a_0.(p^2 + q^2) $$   
+;; For transformations on b
+;; $$ b_2 \larr b_1p + a_1q $$
+;; $$ b_2 \larr (b_0p + a_0q).p + (b_0q+a_0q+a_0p).q $$
+;; $$ b_2 \larr b_0pp + a_0pq + b_0qq + a_0qq + a_0pq $$
+;; $$ b_2 \larr b_0pp + b_0qq + a_0pq + a_0qq + a_0pq $$
+;; $$ b_2 \larr b_0.(p^2 + q^2) + a_0.(q^2 + 2pq) $$
+;; This shows that
+;; $$ p' \larr p^2 + q^2 $$
+;; $$ q' \larr q^2 + 2pq $$
+
+;; running in logarithmic steps
+;; sicp.core=> (clojure.tools.trace/dotrace [fib-iter] (fib 32))
+;; TRACE t2413: (fib-iter 1N 0N 0N 1N 32)
+;; TRACE t2414: | (fib-iter 1N 0N 1N 1N 16)
+;; TRACE t2415: | | (fib-iter 1N 0N 2N 3N 8)
+;; TRACE t2416: | | | (fib-iter 1N 0N 13N 21N 4)
+;; TRACE t2417: | | | | (fib-iter 1N 0N 610N 987N 2)
+;; TRACE t2418: | | | | | (fib-iter 1N 0N 1346269N 2178309N 1)
+;; TRACE t2419: | | | | | | (fib-iter 3524578N 2178309N 1346269N 2178309N 0N)
+;; TRACE t2419: | | | | | | => 2178309N
+;; TRACE t2418: | | | | | => 2178309N
+;; TRACE t2417: | | | | => 2178309N
+;; TRACE t2416: | | | => 2178309N
+;; TRACE t2415: | | => 2178309N
+;; TRACE t2414: | => 2178309N
+;; TRACE t2413: => 2178309N
+;; 2178309N
+;; sicp.core=> (clojure.tools.trace/dotrace [fib-iter] (fib 33))
+;; TRACE t2425: (fib-iter 1N 0N 0N 1N 33)
+;; TRACE t2426: | (fib-iter 1N 1N 0N 1N 32N)
+;; TRACE t2427: | | (fib-iter 1N 1N 1N 1N 16N)
+;; TRACE t2428: | | | (fib-iter 1N 1N 2N 3N 8N)
+;; TRACE t2429: | | | | (fib-iter 1N 1N 13N 21N 4N)
+;; TRACE t2430: | | | | | (fib-iter 1N 1N 610N 987N 2N)
+;; TRACE t2431: | | | | | | (fib-iter 1N 1N 1346269N 2178309N 1N)
+;; TRACE t2432: | | | | | | | (fib-iter 5702887N 3524578N 1346269N 2178309N 0N)
+;; TRACE t2432: | | | | | | | => 3524578N
+;; TRACE t2431: | | | | | | => 3524578N
+;; TRACE t2430: | | | | | => 3524578N
+;; TRACE t2429: | | | | => 3524578N
+;; TRACE t2428: | | | => 3524578N
+;; TRACE t2427: | | => 3524578N
+;; TRACE t2426: | => 3524578N
+;; TRACE t2425: => 3524578N
+;; 3524578N
