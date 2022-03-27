@@ -807,3 +807,38 @@
 ;; TRACE t2426: | => 3524578N
 ;; TRACE t2425: => 3524578N
 ;; 3524578N
+
+;; exercise 1.20
+(defn ^:dynamic mod' [a b] (mod a b))
+
+(defn ^:dynamic gcd-applicative [a b] (if (= b 0) a (recur b (mod' a b))))
+
+(defmacro gcd-normal [a b] (if (= (eval b) 0) (eval a) `(gcd-normal ~b (mod' ~a ~b))))
+
+;;  (clojure.tools.trace/dotrace [mod'] (gcd-applicative 206 40))
+;;  TRACE t1993: (mod' 206 40)
+;;  TRACE t1993: => 6
+;;  TRACE t1994: (mod' 40 6)
+;;  TRACE t1994: => 4
+;;  TRACE t1995: (mod' 6 4)
+;;  TRACE t1995: => 2
+;;  TRACE t1996: (mod' 4 2)
+;;  TRACE t1996: => 0
+;;  => 2
+
+
+;;  (take 5 (iterate macroexpand-1 '(gcd-normal 206 40)))
+;;  =>
+;;  ((gcd-normal 206 40)
+;;   (sicp.chapter1/gcd-normal 40 (sicp.chapter1/mod' 206 40))
+;;   (sicp.chapter1/gcd-normal (sicp.chapter1/mod' 206 40) (sicp.chapter1/mod' 40 (sicp.chapter1/mod' 206 40)))
+;;   (sicp.chapter1/gcd-normal
+;;     (sicp.chapter1/mod' 40 (sicp.chapter1/mod' 206 40))
+;;     (sicp.chapter1/mod' (sicp.chapter1/mod' 206 40) (sicp.chapter1/mod' 40 (sicp.chapter1/mod' 206 40))))
+;;   (sicp.chapter1/gcd-normal
+;;     (sicp.chapter1/mod' (sicp.chapter1/mod' 206 40) (sicp.chapter1/mod' 40 (sicp.chapter1/mod' 206 40)))
+;;     (sicp.chapter1/mod'
+;;       (sicp.chapter1/mod' 40 (sicp.chapter1/mod' 206 40))
+;;       (sicp.chapter1/mod' (sicp.chapter1/mod' 206 40) (sicp.chapter1/mod' 40 (sicp.chapter1/mod' 206 40))))))
+
+;; there are around 21 mod' operations.
