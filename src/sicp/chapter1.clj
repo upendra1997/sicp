@@ -842,3 +842,38 @@
 ;;       (sicp.chapter1/mod' (sicp.chapter1/mod' 206 40) (sicp.chapter1/mod' 40 (sicp.chapter1/mod' 206 40))))))
 
 ;; there are around 21 mod' operations.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn divides? [a b] (= (mod b a) 0))
+
+(defn find-divisor [n test-divisor]
+  (cond (> (square test-divisor) n) n
+        (divides? test-divisor n) test-divisor
+        :else (find-divisor n (+ test-divisor 1))))
+
+(defn smallest-divisor [n] (find-divisor n 2))
+
+(defn prime? [n] (= n (smallest-divisor n)))
+
+(defn exp-mod [base exp m]
+  (cond (= exp 0) 1
+        (even? exp) (mod (square (exp-mod base (/ exp 2) m)) m)
+        :else (mod (* base (exp-mod base (- exp 1) m)) m)))
+
+(defn fermet-test [n]
+  (let [try-it (fn [a] (= (exp-mod a n n) a))]
+    (try-it (+ 1 (rand-int (- n 1))))))
+
+(defn fast-prime? [n times]
+  (cond (= times 0) true
+        (fermet-test n) (fast-prime? n (- times 1))
+        :else false))
+
+;; Exercise 1.21
+(smallest-divisor 199)
+;=> 199
+(smallest-divisor 1999)
+;=> 1999
+(smallest-divisor 19999)
+;=> 7
