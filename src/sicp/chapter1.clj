@@ -977,3 +977,37 @@
 ;=> false
 ;=> false
 ;=> false
+
+;; Exercise 1.28
+(defn non-trivial-sqrt? [n m]
+  (cond (= n 1) false
+        (= n (- m 1)) false
+        :else (= (mod (square n) m) 1)))
+
+
+(defn exp-mod' [base exp m]
+  (cond (= exp 0) 1
+        (even? exp) (let
+                      [result (exp-mod' base (/ exp 2) m)]
+                      (if (non-trivial-sqrt? result m)
+                        1
+                        (mod (square result) m)))
+        :else (mod (* base (exp-mod' base (- exp 1) m)) m)))
+
+
+(defn miller-rabin [n]
+  (let [try-it (fn [a] (let [result (exp-mod' a (- n 1) n)] (and (not (= result 0)) (= result 1))))]
+    (every? try-it (range 2 (min (- n 1) 100)))))
+
+
+(= (miller-rabin 561) (prime? 561))
+(= (miller-rabin 1105) (prime? 1105))
+(= (miller-rabin 1729) (prime? 1729))
+(= (miller-rabin 2465) (prime? 2465))
+(= (miller-rabin 2821) (prime? 2821))
+(= (miller-rabin 6601) (prime? 6601))
+(= (miller-rabin 4) (prime? 4))
+(= (miller-rabin 5) (prime? 5))
+(= (miller-rabin 3) (prime? 3))
+(= (miller-rabin 9) (prime? 9))
+(every? #(= (miller-rabin %1) (prime? %1)) (range 3 10000))
