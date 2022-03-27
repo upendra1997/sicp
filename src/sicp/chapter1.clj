@@ -896,6 +896,17 @@
 ;"Elapsed time: 0.117023 msecs"
 ;=> (100003 100019 100043)
 
+(time (search-for-primes '(1009 1013 1019)))
+(time (search-for-primes '(10007 10009 10037)))
+(time (search-for-primes '(100003 100019 100043)))
+
+;"Elapsed time: 0.024031 msecs"
+;=> (1009 1013 1019)
+;"Elapsed time: 0.022534 msecs"
+;=> (10007 10009 10037)
+;"Elapsed time: 0.023422 msecs"
+;=> (100003 100019 100043)
+
 ;; timing is not matching out, as the \sqrt(n) is the complexity of checking prime but it does not tell how many primes
 ;; it have to check before finding all three primes.
 
@@ -911,4 +922,58 @@
 ;"Elapsed time: 0.032178 msecs"
 ;=> (100003 100019 100043)
 
+(time (search-for-primes '(1009 1013 1019)))
+(time (search-for-primes '(10007 10009 10037)))
+(time (search-for-primes '(100003 100019 100043)))
+
+;"Elapsed time: 0.024031 msecs"
+;=> (1009 1013 1019)
+;"Elapsed time: 0.022534 msecs"
+;=> (10007 10009 10037)
+;"Elapsed time: 0.023422 msecs"
+;=> (100003 100019 100043)
+
 ;; time is almost halved; the other inconsistency can be due to jvm?
+
+;; Exercise 1.24
+(time (map #(fast-prime? %1 100)  '(1009 1013 1019)))
+(time (map #(fast-prime? %1 100) '(10007 10009 10037)))
+(time (map #(fast-prime? %1 100)  '(100003 100019 100043)))
+
+;"Elapsed time: 0.098246 msecs"
+;=> (true true true)
+;"Elapsed time: 0.10523 msecs"
+;=> (true true true)
+;"Elapsed time: 0.618247 msecs"
+;=> (true true true)
+
+
+;; Exercise 1.25
+; this would give correct answer, but it would be needlessly slow.
+; as numbers might get very big and would need extra time to calculate exp
+; which can be reduced as we only need modulus of answer.
+
+
+;; Exercise 1.26
+; This would make it O(n) as we are calling expmod two times.
+
+
+;; Exercise 1.27
+(defn fermet-test' [n]
+  (let [try-it (fn [a] (= (exp-mod a n n) a))]
+    (every? try-it (range 1 (- n 1)))))
+
+(= (fermet-test' 561) (prime? 561))
+(= (fermet-test' 1105) (prime? 1105))
+(= (fermet-test' 1729) (prime? 1729))
+(= (fermet-test' 2465) (prime? 2465))
+(= (fermet-test' 2821) (prime? 2821))
+(= (fermet-test' 6601) (prime? 6601))
+
+;=> #'sicp.chapter1/fermet-test'
+;=> false
+;=> false
+;=> false
+;=> false
+;=> false
+;=> false
