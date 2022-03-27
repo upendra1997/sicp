@@ -877,3 +877,20 @@
 ;=> 1999
 (smallest-divisor 19999)
 ;=> 7
+
+;; Exercise 1.22
+(defn search-for-primes [list-of-primes]
+                  (filter prime? list-of-primes))
+
+(time (take 3 (search-for-primes (iterate inc 1000))))
+;"Elapsed time: 0.064145 msecs"
+;=> (1009 1013 1019)
+(time (take 3 (search-for-primes (iterate inc 10000))))
+;"Elapsed time: 0.035271 msecs"
+;=> (10007 10009 10037)
+(time (take 3 (search-for-primes (iterate inc 100000))))
+;"Elapsed time: 0.117023 msecs"
+;=> (100003 100019 100043)
+
+;; timing is not matching out, as the \sqrt(n) is the complexity of checking prime but it does not tell how many primes
+;; it have to check before finding all three primes.
