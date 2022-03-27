@@ -848,9 +848,13 @@
 (defn divides? [a b] (= (mod b a) 0))
 
 (defn find-divisor [n test-divisor]
-  (cond (> (square test-divisor) n) n
-        (divides? test-divisor n) test-divisor
-        :else (find-divisor n (+ test-divisor 1))))
+  (let [next-divisor (fn [test-divisor]
+                       (if (even? test-divisor)
+                         (+ 1 test-divisor)
+                         (+ 2 test-divisor)))]
+    (cond (> (square test-divisor) n) n
+          (divides? test-divisor n) test-divisor
+          :else (find-divisor n (next-divisor test-divisor)))))
 
 (defn smallest-divisor [n] (find-divisor n 2))
 
@@ -894,3 +898,17 @@
 
 ;; timing is not matching out, as the \sqrt(n) is the complexity of checking prime but it does not tell how many primes
 ;; it have to check before finding all three primes.
+
+;; Exercise 1.23
+;; implemented next-divisor
+(time (take 3 (search-for-primes (iterate inc 1000))))
+;"Elapsed time: 0.037455 msecs"
+;=> (1009 1013 1019)
+(time (take 3 (search-for-primes (iterate inc 10000))))
+;"Elapsed time: 0.036846 msecs"
+;=> (10007 10009 10037)
+(time (take 3 (search-for-primes (iterate inc 100000))))
+;"Elapsed time: 0.032178 msecs"
+;=> (100003 100019 100043)
+
+;; time is almost halved; the other inconsistency can be due to jvm?
