@@ -82,8 +82,8 @@
 
 ;; 1.2
 (def result1_2 (/
-                (+ 5 4 (- 2 3 (+ 6 (/ 4 5))))
-                (* 3 (- 6 2) (- 2 7))))
+                 (+ 5 4 (- 2 3 (+ 6 (/ 4 5))))
+                 (* 3 (- 6 2) (- 2 7))))
 
 ;; sicp.core=> result1_2
 ;; -1/50
@@ -275,9 +275,9 @@
 (defn f-recur [n] (cond
                     (< n 3) n
                     :else (+
-                           (f-recur (- n 1))
-                           (* 2 (f-recur (- n 2)))
-                           (* 3 (f-recur (- n 3))))))
+                            (f-recur (- n 1))
+                            (* 2 (f-recur (- n 2)))
+                            (* 3 (f-recur (- n 3))))))
 
 (defn f-iter ([n] (f-iter 0 1 2 n))
   ([a b c n] (cond
@@ -291,8 +291,8 @@
                                         (= position 1) 1
                                         (= position line) 1
                                         :else (+
-                                               (pascal-triangle (- line 1) (- position 1))
-                                               (pascal-triangle (- line 1) position))))
+                                                (pascal-triangle (- line 1) (- position 1))
+                                                (pascal-triangle (- line 1) position))))
 
 ;; 1.13 use markdown with latex support to view the proof:
 ;; prove that $Fib(n)$ is closest integer to $\varphi^n/\sqrt{5}$, where $\varphi=(1+\sqrt{5})/2$  
@@ -666,7 +666,7 @@
 (defn ^:dynamic p [x] (- (* 3 x) (* 4 (cube x))))
 (defn sine [angle]
   (if (not (> (abs angle) 0.1)) angle
-      (p (sine (/ angle 3.0)))))
+                                (p (sine (/ angle 3.0)))))
 
 ;; sicp.core=> (require 'clojure.tools.trace)
 ;; nil
@@ -884,7 +884,7 @@
 
 ;; Exercise 1.22
 (defn search-for-primes [list-of-primes]
-                  (filter prime? list-of-primes))
+  (filter prime? list-of-primes))
 
 (time (take 3 (search-for-primes (iterate inc 1000))))
 ;"Elapsed time: 0.064145 msecs"
@@ -936,9 +936,9 @@
 ;; time is almost halved; the other inconsistency can be due to jvm?
 
 ;; Exercise 1.24
-(time (map #(fast-prime? %1 100)  '(1009 1013 1019)))
+(time (map #(fast-prime? %1 100) '(1009 1013 1019)))
 (time (map #(fast-prime? %1 100) '(10007 10009 10037)))
-(time (map #(fast-prime? %1 100)  '(100003 100019 100043)))
+(time (map #(fast-prime? %1 100) '(100003 100019 100043)))
 
 ;"Elapsed time: 0.098246 msecs"
 ;=> (true true true)
@@ -1011,3 +1011,36 @@
 (= (miller-rabin 3) (prime? 3))
 (= (miller-rabin 9) (prime? 9))
 (every? #(= (miller-rabin %1) (prime? %1)) (range 3 10000))
+
+(defn sum [term a next b]
+  (if (> a b) 0 (+ (term a) (sum term (next a) next b))))
+
+(defn sum-integers [a b] (sum identity a inc b))
+(defn sum-cubes [a b] (sum cube a inc b))
+
+(defn pi-sum [a b] (sum
+                     #(/ 1.0 (* %1 (+ %1 2)))
+                     a
+                     #(+ 4 %1)
+                     b))
+
+(* 8 (pi-sum 1 10000))
+
+(defn integral [f a b dx]
+  (* dx (sum
+          f
+          (+ a (/ dx 2.0))
+          #(+ dx %1)
+          b)))
+
+(defn integral [f a b n]
+  (let [h (/ (- b a) (* 2 n))
+        add-2h #(+ %1 h h)]
+    (* (/ h 3.0)
+       (+
+         (f a)
+         (* 2 (sum f a add-2h b))
+         (* 4 (sum f (+ h a) add-2h b))
+         (f b)))))
+
+(integral cube 0 1 1000)
