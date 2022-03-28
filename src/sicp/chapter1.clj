@@ -1015,6 +1015,14 @@
 (defn sum [term a next b]
   (if (> a b) 0 (+ (term a) (sum term (next a) next b))))
 
+;; Exercise 1.30
+(defn sum [term a next b]
+  (let [iter (fn [a result] (if
+                              (> a b)
+                              result
+                              (recur (next a) (+ result (term a)))))]
+    (iter a 0)))
+
 (defn sum-integers [a b] (sum identity a inc b))
 (defn sum-cubes [a b] (sum cube a inc b))
 
@@ -1024,7 +1032,7 @@
                      #(+ 4 %1)
                      b))
 
-(* 8 (pi-sum 1 10000))
+(* 8 (pi-sum 1 100000000))
 
 (defn integral [f a b dx]
   (* dx (sum
@@ -1033,6 +1041,7 @@
           #(+ dx %1)
           b)))
 
+;; Exercise 1.29
 (defn integral [f a b n]
   (let [h (/ (- b a) (* 2 n))
         add-2h #(+ %1 h h)]
