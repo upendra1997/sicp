@@ -1179,9 +1179,10 @@
 
 (defn fixed-point [f first-guess]
   (defn try-guess [guess] (let [next (f guess)]
-                      (if (close-enough? guess next)
-                        next
-                        (recur next))))
+                            (println "guess: " guess)
+                            (if (close-enough? guess next)
+                              next
+                              (recur next))))
   (try-guess first-guess))
 
 (fixed-point #(Math/cos %1) 1.0)
@@ -1191,3 +1192,7 @@
 
 ;; Exercise 1.35
 (def phi (fixed-point #(+ 1 (/ 1.0 %1)) 1.0))
+
+;; Exercise 1.36
+(println (fixed-point #(/ (Math/log 1000) (Math/log %1)) 2)) ;; 35 steps
+(println (fixed-point #(average %1 (/ (Math/log 1000) (Math/log %1))) 2)) ;; 10 steps
