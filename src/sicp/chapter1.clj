@@ -1078,3 +1078,30 @@
                (* 2 (product term 1.0 inc n))))
 
 (pi 100000)
+
+;; Exercise 1.32
+(defn accumulate [combiner empty term a next b]
+  (if (> a b) empty (combiner
+                      (term a)
+                      (accumulate
+                        combiner
+                        empty
+                        term
+                        (next a)
+                        next
+                        b))))
+
+(defn sum-integers [a b] (accumulate + 0 identity a inc b))
+(sum-integers 0 100)
+
+(defn accumulate [combiner empty term a next b]
+  (let [iter (fn [a result] (if
+                              (> a b)
+                              result
+                              (recur
+                                (next a)
+                                (combiner result (term a)))))]
+    (iter a empty)))
+
+(defn sum-integers [a b] (accumulate + 0 identity a inc b))
+(sum-integers 0 100)
