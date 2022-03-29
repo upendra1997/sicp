@@ -1053,3 +1053,28 @@
          (f b)))))
 
 (integral cube 0 1 1000)
+
+;; Exercise 1.31
+(defn product [term a next b]
+  (if (> a b) 1 (* (term a) (product term (next a) next b))))
+
+(defn factorial [n] (product identity 1 inc n))
+(factorial 10)
+
+(defn product [term a next b]
+  (let [iter (fn [a result] (if
+                              (> a b)
+                              result
+                              (recur (next a) (* result (term a)))))]
+    (iter a 1)))
+
+(defn factorial [n] (product identity 1 inc n))
+(factorial 10)
+
+(defn pi [n] (let [term (fn [n] (* (/ (* 2 n)
+                             (- (* 2 n) 1))
+                          (/ (* 2 n)
+                             (+ (* 2 n) 1))))]
+               (* 2 (product term 1.0 inc n))))
+
+(pi 100000)
