@@ -1152,3 +1152,42 @@
 (f f)
 ;Execution error (ClassCastException) at sicp.chapter1/f (chapter1.clj:1).
 ;java.lang.Long cannot be cast to clojure.lang.IFn
+
+(def ^:dynamic **tolerance** 0.00001)
+
+(defn close-enough? [x y] (< (abs (- x y)) **tolerance**))
+
+(defn search [f neg-point pos-point]
+  (let [midpoint (average neg-point pos-point)]
+    (if (close-enough? neg-point pos-point)
+      midpoint
+      (let [test-value (f midpoint)]
+        (cond (pos? test-value) (recur f neg-point midpoint)
+              (neg? test-value) (recur f midpoint pos-point)
+              :else midpoint)))))
+
+(defn half-interval [f a b]
+  (let [a-value (f a)
+        b-value (f b)]
+    (cond
+      (and (neg? a-value) (pos? b-value)) (search f a b)
+      (and (neg? b-value) (pos? a-value)) (search f b a)
+      :else (throw (Exception. "Values are opposite sign")))))
+
+(half-interval sine 2.0 4.0)
+(half-interval #(- (* %1 %1 %1) (* 2 %1) 3) 1.0 2.0)
+
+(defn fixed-point [f first-guess]
+  (defn try-guess [guess] (let [next (f guess)]
+                      (if (close-enough? guess next)
+                        next
+                        (recur next))))
+  (try-guess first-guess))
+
+(fixed-point #(Math/cos %1) 1.0)
+(fixed-point #(+ (Math/sin %1) (Math/cos %1)) 1.0)
+(defn sqrt [x] (fixed-point #(average %1 (/ x %1)) 1.0))
+(sqrt 2)
+
+;; Exercise 1.35
+(def phi (fixed-point #(+ 1 (/ 1.0 %1)) 1.0))
