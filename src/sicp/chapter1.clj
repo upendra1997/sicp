@@ -1130,13 +1130,25 @@
   (reduce + (map #(* %1 %1) (filter prime? (range 2 10)))))
 
 (defn product-relatively-prime [n] (filtered-accumulate
-                                *
-                                #(= 1 (gcd-applicative %1 n))
-                                1
-                                identity
-                                1
-                                inc
-                                n))
+                                     *
+                                     #(= 1 (gcd-applicative %1 n))
+                                     1
+                                     identity
+                                     1
+                                     inc
+                                     n))
 
 (= (product-relatively-prime 10)
    (reduce * (filter #(= 1 (gcd-applicative %1 10)) (range 1 10))))
+
+;; Exercise 1.34
+
+(defn f [g] (g 2))
+;=> #'sicp.chapter1/f
+(f square)
+;=> 4
+(f #(* %1 (+ %1 1)))
+;=> 6
+(f f)
+;Execution error (ClassCastException) at sicp.chapter1/f (chapter1.clj:1).
+;java.lang.Long cannot be cast to clojure.lang.IFn
