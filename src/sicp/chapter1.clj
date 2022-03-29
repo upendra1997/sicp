@@ -1072,9 +1072,9 @@
 (factorial 10)
 
 (defn pi [n] (let [term (fn [n] (* (/ (* 2 n)
-                             (- (* 2 n) 1))
-                          (/ (* 2 n)
-                             (+ (* 2 n) 1))))]
+                                      (- (* 2 n) 1))
+                                   (/ (* 2 n)
+                                      (+ (* 2 n) 1))))]
                (* 2 (product term 1.0 inc n))))
 
 (pi 100000)
@@ -1105,3 +1105,38 @@
 
 (defn sum-integers [a b] (accumulate + 0 identity a inc b))
 (sum-integers 0 100)
+
+(defn filtered-accumulate [combiner pred empty term a next b]
+  (let [iter (fn [a result] (cond
+                              (> a b) result
+                              :else (recur
+                                      (next a)
+                                      (combiner
+                                        result
+                                        (if (pred a) (term a) empty)))))]
+    (iter a empty)))
+
+(defn sum-square-primes [a b] (filtered-accumulate
+                                +
+                                prime?
+                                0
+                                #(* %1 %1)
+                                a
+                                inc
+                                b))
+
+(=
+  (sum-square-primes 2 10)
+  (reduce + (map #(* %1 %1) (filter prime? (range 2 10)))))
+
+(defn product-relatively-prime [n] (filtered-accumulate
+                                *
+                                #(= 1 (gcd-applicative %1 n))
+                                1
+                                identity
+                                1
+                                inc
+                                n))
+
+(= (product-relatively-prime 10)
+   (reduce * (filter #(= 1 (gcd-applicative %1 10)) (range 1 10))))
