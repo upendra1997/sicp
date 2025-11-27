@@ -1149,7 +1149,7 @@
 ;=> 4
 (f #(* %1 (+ %1 1)))
 ;=> 6
-(f f)
+#_(f f)
 ;Execution error (ClassCastException) at sicp.chapter1/f (chapter1.clj:1).
 ;java.lang.Long cannot be cast to clojure.lang.IFn
 
