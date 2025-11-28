@@ -1235,3 +1235,99 @@
 
 (java.lang.Math/tan 100)
 ;; => -0.5872139151569291
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn average-damp [f]
+  (fn [x] (average x (f x))))
+
+((average-damp square) 10)
+;; => 55
+
+
+(defn sqrt [x]
+  (fixed-point (average-damp #(/ x %1)) 1.0))
+
+(sqrt 2.0)
+;; => 1.4142135623746899
+
+
+(defn cube-root [x]
+  (fixed-point (average-damp #(/ x (square %1))) 1.0))
+
+(cube-root 28)
+;; => 3.0365861982520808
+
+
+(defn derive [f]
+  (fn [& args]
+    (/
+     (- (apply f (map (partial + **tolerance**) args)) (apply f args))
+     **tolerance**)))
+
+((derive cube) 5)
+;; => 75.00014999664018
+
+(defn newton-transform [f]
+  (fn [x]
+    (- x (/ (f x) ((derive f) x)))))
+
+(defn newton-method [f guess]
+  (fixed-point (newton-transform f) guess))
+
+(defn sqrt [x]
+  (newton-method #(- (square %1) x) 1.0))
+
+(sqrt 2.0)
+;; => 1.4142135623822438
+
+(defn fixed-point-of-transform [f transform guess]
+  (fixed-point (transform f) guess))
+
+(defn sqrt [x]
+  (fixed-point-of-transform #(/ x %1) average-damp 1.0))
+
+(sqrt 2.0)
+;; => 1.4142135623746899
+
+(defn sqrt [x]
+  (fixed-point-of-transform #(- (square %1) x) newton-transform 1.0))
+
+(sqrt 2.0)
+;; => 1.4142135623822438
+
+
+;; Excercise 1.40
+
+(defn cubic [a b c]
+  (fn [x]
+    (+ (* x x x) (* a x x) (* b x) c)))
+
+(newton-method (cubic 4 1 1) 1.0)
+;; => -3.806300716739964
+
+(newton-method (cubic 1 1 1) 1.0)
+;; => -0.9999999999997796
+
+
+;; Excercise 1.41
+(defn double [f]
+  (fn [x]
+    (f (f x))))
+
+(((double (double double)) inc) 5)
+;; => 21
+
+
+;; Excercise 1.42
+((comp square inc) 6)
+;; => 49
+
+
+;; Excercise 1.43
+(defn repeated [f n]
+  (fn [x]
+    (last (take (+ 1 n) (iterate f x)))))
+
+((repeated square 2) 5)
+;; => 625
