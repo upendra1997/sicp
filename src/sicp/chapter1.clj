@@ -1220,3 +1220,18 @@
      (last)
      (+ 2))
 ;; => 2.718031032637774
+
+
+;; Excercise 1.39
+(defn tan [x k]
+  (let [n-series (cons x (repeat (- (* x x))))
+        d-series (iterate (partial + 2) 1)]
+    #_(map #(identity [%1 %2]) n-series d-series)
+    (cont-frac #(nth n-series %1) #(nth d-series %1) k)))
+
+(double (tan 100 200))
+;; => -0.5872139151569291
+
+
+(java.lang.Math/tan 100)
+;; => -0.5872139151569291
