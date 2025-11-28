@@ -1196,3 +1196,22 @@
 ;; Exercise 1.36
 (println (fixed-point #(/ (Math/log 1000) (Math/log %1)) 2)) ;; 35 steps
 (println (fixed-point #(average %1 (/ (Math/log 1000) (Math/log %1))) 2)) ;; 10 steps
+
+
+;; Exercise 1.37
+(defn cont-frac
+  ([n d k] (cont-frac n d k 0))
+  ([n d k cnt]
+   (cond
+     (= k cnt) (+ (d cnt) (/ (n cnt) (d cnt)))
+     :else (/ (n cnt) (+ (d cnt) (cont-frac n d k (+ 1 cnt)))))))
+
+(cont-frac (constantly 1.0) (constantly 1.0) 10)
+
+(def ^:dynamic golden-ratio 1.61803398875M)
+
+(->> (range 1 1000)
+     (map (partial cont-frac (constantly 1.0) (constantly 1.0)))
+     (take-while #(not (close-enough? (/ 1.0 golden-ratio) %1)))
+     (count))
+;; 11
