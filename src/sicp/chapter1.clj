@@ -10,10 +10,8 @@
                 (= x 0) 0
                 (< x 0) (- x)))
 
-
 ;; Excercise Questions
 ;; 1.1
-
 
 10
 (+ 5 3 4)
@@ -82,8 +80,8 @@
 
 ;; 1.2
 (def result1_2 (/
-                 (+ 5 4 (- 2 3 (+ 6 (/ 4 5))))
-                 (* 3 (- 6 2) (- 2 7))))
+                (+ 5 4 (- 2 3 (+ 6 (/ 4 5))))
+                (* 3 (- 6 2) (- 2 7))))
 
 ;; sicp.core=> result1_2
 ;; -1/50
@@ -241,7 +239,6 @@
 ;; $$ h(n) = {^{n}2} $$
 (defn k [n] (* 5 n n))                                      ;; $$k(n) = 5n^2$$
 
-
 (defn fib-recur [n] (cond
                       (= n 0) 0
                       (= n 1) 1
@@ -275,9 +272,9 @@
 (defn f-recur [n] (cond
                     (< n 3) n
                     :else (+
-                            (f-recur (- n 1))
-                            (* 2 (f-recur (- n 2)))
-                            (* 3 (f-recur (- n 3))))))
+                           (f-recur (- n 1))
+                           (* 2 (f-recur (- n 2)))
+                           (* 3 (f-recur (- n 3))))))
 
 (defn f-iter ([n] (f-iter 0 1 2 n))
   ([a b c n] (cond
@@ -291,8 +288,8 @@
                                         (= position 1) 1
                                         (= position line) 1
                                         :else (+
-                                                (pascal-triangle (- line 1) (- position 1))
-                                                (pascal-triangle (- line 1) position))))
+                                               (pascal-triangle (- line 1) (- position 1))
+                                               (pascal-triangle (- line 1) position))))
 
 ;; 1.13 use markdown with latex support to view the proof:
 ;; prove that $Fib(n)$ is closest integer to $\varphi^n/\sqrt{5}$, where $\varphi=(1+\sqrt{5})/2$  
@@ -658,7 +655,6 @@
 ;; 4
 ;; sicp.core=> 
 
-
 ;; this shows that space usage is O(amount) and number of steps seems to be O(n^5)
 
 ;; excerise 1.15
@@ -666,7 +662,7 @@
 (defn ^:dynamic p [x] (- (* 3 x) (* 4 (cube x))))
 (defn sine [angle]
   (if (not (> (abs angle) 0.1)) angle
-                                (p (sine (/ angle 3.0)))))
+      (p (sine (/ angle 3.0)))))
 
 ;; sicp.core=> (require 'clojure.tools.trace)
 ;; nil
@@ -826,7 +822,6 @@
 ;;  TRACE t1996: => 0
 ;;  => 2
 
-
 ;;  (take 5 (iterate macroexpand-1 '(gcd-normal 206 40)))
 ;;  =>
 ;;  ((gcd-normal 206 40)
@@ -947,16 +942,13 @@
 ;"Elapsed time: 0.618247 msecs"
 ;=> (true true true)
 
-
 ;; Exercise 1.25
 ; this would give correct answer, but it would be needlessly slow.
 ; as numbers might get very big and would need extra time to calculate exp
 ; which can be reduced as we only need modulus of answer.
 
-
 ;; Exercise 1.26
 ; This would make it O(n) as we are calling expmod two times.
-
 
 ;; Exercise 1.27
 (defn fermet-test' [n]
@@ -984,21 +976,18 @@
         (= n (- m 1)) false
         :else (= (mod (square n) m) 1)))
 
-
 (defn exp-mod' [base exp m]
   (cond (= exp 0) 1
         (even? exp) (let
-                      [result (exp-mod' base (/ exp 2) m)]
+                     [result (exp-mod' base (/ exp 2) m)]
                       (if (non-trivial-sqrt? result m)
                         1
                         (mod (square result) m)))
         :else (mod (* base (exp-mod' base (- exp 1) m)) m)))
 
-
 (defn miller-rabin [n]
   (let [try-it (fn [a] (let [result (exp-mod' a (- n 1) n)] (and (not (= result 0)) (= result 1))))]
     (every? try-it (range 2 (min (- n 1) 100)))))
-
 
 (= (miller-rabin 561) (prime? 561))
 (= (miller-rabin 1105) (prime? 1105))
@@ -1018,7 +1007,7 @@
 ;; Exercise 1.30
 (defn sum [term a next b]
   (let [iter (fn [a result] (if
-                              (> a b)
+                             (> a b)
                               result
                               (recur (next a) (+ result (term a)))))]
     (iter a 0)))
@@ -1027,19 +1016,19 @@
 (defn sum-cubes [a b] (sum cube a inc b))
 
 (defn pi-sum [a b] (sum
-                     #(/ 1.0 (* %1 (+ %1 2)))
-                     a
-                     #(+ 4 %1)
-                     b))
+                    #(/ 1.0 (* %1 (+ %1 2)))
+                    a
+                    #(+ 4 %1)
+                    b))
 
 (* 8 (pi-sum 1 100000000))
 
 (defn integral [f a b dx]
   (* dx (sum
-          f
-          (+ a (/ dx 2.0))
-          #(+ dx %1)
-          b)))
+         f
+         (+ a (/ dx 2.0))
+         #(+ dx %1)
+         b)))
 
 ;; Exercise 1.29
 (defn integral [f a b n]
@@ -1047,10 +1036,10 @@
         add-2h #(+ %1 h h)]
     (* (/ h 3.0)
        (+
-         (f a)
-         (* 2 (sum f a add-2h b))
-         (* 4 (sum f (+ h a) add-2h b))
-         (f b)))))
+        (f a)
+        (* 2 (sum f a add-2h b))
+        (* 4 (sum f (+ h a) add-2h b))
+        (f b)))))
 
 (integral cube 0 1 1000)
 
@@ -1063,7 +1052,7 @@
 
 (defn product [term a next b]
   (let [iter (fn [a result] (if
-                              (> a b)
+                             (> a b)
                               result
                               (recur (next a) (* result (term a)))))]
     (iter a 1)))
@@ -1082,25 +1071,25 @@
 ;; Exercise 1.32
 (defn accumulate [combiner empty term a next b]
   (if (> a b) empty (combiner
-                      (term a)
-                      (accumulate
-                        combiner
-                        empty
-                        term
-                        (next a)
-                        next
-                        b))))
+                     (term a)
+                     (accumulate
+                      combiner
+                      empty
+                      term
+                      (next a)
+                      next
+                      b))))
 
 (defn sum-integers [a b] (accumulate + 0 identity a inc b))
 (sum-integers 0 100)
 
 (defn accumulate [combiner empty term a next b]
   (let [iter (fn [a result] (if
-                              (> a b)
+                             (> a b)
                               result
                               (recur
-                                (next a)
-                                (combiner result (term a)))))]
+                               (next a)
+                               (combiner result (term a)))))]
     (iter a empty)))
 
 (defn sum-integers [a b] (accumulate + 0 identity a inc b))
@@ -1110,33 +1099,33 @@
   (let [iter (fn [a result] (cond
                               (> a b) result
                               :else (recur
-                                      (next a)
-                                      (combiner
-                                        result
-                                        (if (pred a) (term a) empty)))))]
+                                     (next a)
+                                     (combiner
+                                      result
+                                      (if (pred a) (term a) empty)))))]
     (iter a empty)))
 
 (defn sum-square-primes [a b] (filtered-accumulate
-                                +
-                                prime?
-                                0
-                                #(* %1 %1)
-                                a
-                                inc
-                                b))
+                               +
+                               prime?
+                               0
+                               #(* %1 %1)
+                               a
+                               inc
+                               b))
 
 (=
-  (sum-square-primes 2 10)
-  (reduce + (map #(* %1 %1) (filter prime? (range 2 10)))))
+ (sum-square-primes 2 10)
+ (reduce + (map #(* %1 %1) (filter prime? (range 2 10)))))
 
 (defn product-relatively-prime [n] (filtered-accumulate
-                                     *
-                                     #(= 1 (gcd-applicative %1 n))
-                                     1
-                                     identity
-                                     1
-                                     inc
-                                     n))
+                                    *
+                                    #(= 1 (gcd-applicative %1 n))
+                                    1
+                                    identity
+                                    1
+                                    inc
+                                    n))
 
 (= (product-relatively-prime 10)
    (reduce * (filter #(= 1 (gcd-applicative %1 10)) (range 1 10))))
@@ -1196,7 +1185,6 @@
 ;; Exercise 1.36
 (println (fixed-point #(/ (Math/log 1000) (Math/log %1)) 2)) ;; 35 steps
 (println (fixed-point #(average %1 (/ (Math/log 1000) (Math/log %1))) 2)) ;; 10 steps
-
 
 ;; Exercise 1.37
 (defn cont-frac
