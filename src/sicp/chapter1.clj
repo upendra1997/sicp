@@ -1202,4 +1202,21 @@
      (map (partial cont-frac (constantly 1.0) (constantly 1.0)))
      (take-while #(not (close-enough? (/ 1.0 golden-ratio) %1)))
      (count))
-;; 11
+;; => 11
+
+
+;; Excercise 1.38
+(def ones (repeat 1))
+
+(def two-table (iterate (partial + 2) 2))
+
+(def d-series
+  (->> (interleave two-table ones ones)
+       (cons 1)))
+
+(->> (range 2 10)
+     (map (partial cont-frac (constantly 1.0) (partial nth d-series)))
+     (take-while #(not (close-enough? 2.71828M (+ 2 %1))))
+     (last)
+     (+ 2))
+;; => 2.718031032637774
