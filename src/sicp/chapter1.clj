@@ -115,7 +115,7 @@
 (defn improve [guess x] (average guess (/ x guess)))
 
 (defn good-enough? [guess x]
-  (< (abs (- (square guess) x)) 0.001))
+  (< (abs (- (square guess) x)) **tolerance**))
 
 (defn new-if [predicate then-clause else-clause] (cond (predicate then-clause)
                                                        (:else else-clause)))
@@ -1166,13 +1166,18 @@
 (half-interval sine 2.0 4.0)
 (half-interval #(- (* %1 %1 %1) (* 2 %1) 3) 1.0 2.0)
 
-(defn fixed-point [f first-guess]
-  (defn try-guess [guess] (let [next (f guess)]
-                            (println "guess: " guess)
-                            (if (close-enough? guess next)
-                              next
-                              (recur next))))
-  (try-guess first-guess))
+(defn fixed-point
+  ([f first-guess cnt]
+   (defn try-guess [guess n]
+     (let [next (f guess)]
+       (println "guess" guess)
+       (cond
+         (= n cnt) (throw (ex-info "Could not guess" {:guess  guess}))
+         (close-enough? guess next) next
+         :else (recur next (+ n 1)))))
+   (try-guess first-guess 0))
+  ([f first-guess]
+   (fixed-point f first-guess 100)))
 
 (fixed-point #(Math/cos %1) 1.0)
 (fixed-point #(+ (Math/sin %1) (Math/cos %1)) 1.0)
@@ -1303,8 +1308,9 @@
   (fn [x]
     (+ (* x x x) (* a x x) (* b x) c)))
 
-(newton-method (cubic 4 1 1) 1.0)
-;; => -3.806300716739964
+#_(newton-method (cubic 4 1 1) 1.0)
+;; => Execution error (ExceptionInfo) at sicp.chapter1/fixed-point$try-guess (chapter1.clj:1175).
+;;    Could not guess
 
 (newton-method (cubic 1 1 1) 1.0)
 ;; => -0.9999999999997796
@@ -1344,6 +1350,143 @@
      (f x)
      (f (+ x **tolerance**)))))
 
-
 (defn n-fold-smooth [f n]
   (repeated smooth n))
+
+
+;; Exercise 1.45
+(defn nth-root-damped
+  ([x nth damp]
+   (fixed-point
+    ((repeated average-damp damp) #(/ x (Math/pow %1 (- nth 1))))
+    1.0))
+  ([x nth]
+   (let [damp (int (Math/floor (/ (Math/log10 nth) (Math/log10 2))))]
+     (nth-root-damped x nth damp))))
+
+(def result
+  (for [nth (range 2 64)
+        damp (range 1 10)]
+    (try
+      {:guess (nth-root-damped 13 nth damp)
+       :nth nth
+       :damp damp}
+      (catch clojure.lang.ExceptionInfo e
+        (merge {:error (:data (Throwable->map e))}
+               {:nth nth :damp damp})))))
+
+(->> result
+     (filter (comp not :error))
+     (group-by :nth)
+     (map (fn [[k v]] (apply (partial min-key :damp) v)))
+     (concat)
+     (sort-by :nth))
+;; => ({:guess 3.6055512754639905, :nth 2, :damp 1}
+;;     {:guess 2.3513320063295247, :nth 3, :damp 1}
+;;     {:guess 1.898828922115942, :nth 4, :damp 2}
+;;     {:guess 1.6702759745502398, :nth 5, :damp 2}
+;;     {:guess 1.533409125204947, :nth 6, :damp 2}
+;;     {:guess 1.4425669097232419, :nth 7, :damp 2}
+;;     {:guess 1.3779800151366282, :nth 8, :damp 3}
+;;     {:guess 1.329754727118197, :nth 9, :damp 3}
+;;     {:guess 1.2923915772110441, :nth 10, :damp 3}
+;;     {:guess 1.2626028430787632, :nth 11, :damp 3}
+;;     {:guess 1.2383056058801811, :nth 12, :damp 3}
+;;    {:guess 1.218117810596386, :nth 13, :damp 3}
+;;     {:guess 1.201063597550211, :nth 14, :damp 3}
+;;     {:guess 1.1864911164364123, :nth 15, :damp 3}
+;;     {:guess 1.1738739350270155, :nth 16, :damp 4}
+;;     {:guess 1.1628563336988473, :nth 17, :damp 4}
+;;     {:guess 1.153150602202086, :nth 18, :damp 4}
+;;     {:guess 1.1445324720451917, :nth 19, :damp 4}
+;;     {:guess 1.1368359631566203, :nth 20, :damp 4}
+;;     {:guess 1.129910498368128, :nth 21, :damp 4}
+;;     {:guess 1.123655795155952, :nth 22, :damp 4}
+;;     {:guess 1.1179780042236576, :nth 23, :damp 4}
+;;    {:guess 1.1127952408198776, :nth 24, :damp 4}
+;;     {:guess 1.1080491760348847, :nth 25, :damp 4}
+;;     {:guess 1.1036783996182629, :nth 26, :damp 4}
+;;     {:guess 1.0996596446353006, :nth 27, :damp 4}
+;;     {:guess 1.0959356147579495, :nth 28, :damp 4}
+;;     {:guess 1.0924797061886298, :nth 29, :damp 4}
+;;     {:guess 1.0892638641829306, :nth 30, :damp 4}
+;;     {:guess 1.0862597285041695, :nth 31, :damp 5}
+;;     {:guess 1.083454629849435, :nth 32, :damp 5}
+;;     {:guess 1.0808261729590432, :nth 33, :damp 5}
+;;     {:guess 1.0783580370493482, :nth 34, :damp 5}
+;;    {:guess 1.0760359256809549, :nth 35, :damp 5}
+;;     {:guess 1.0738472917249036, :nth 36, :damp 5}
+;;     {:guess 1.071781107234561, :nth 37, :damp 5}
+;;     {:guess 1.0698276676433345, :nth 38, :damp 5}
+;;     {:guess 1.067978421783664, :nth 39, :damp 5}
+;;     {:guess 1.0662258210804825, :nth 40, :damp 5}
+;;     {:guess 1.0645566123324288, :nth 41, :damp 5}
+;;     {:guess 1.0629746309237527, :nth 42, :damp 5}
+;;     {:guess 1.0614672777837049, :nth 43, :damp 5}
+;;     {:guess 1.0600252506381391, :nth 44, :damp 5}
+;;    {:guess 1.0586559091428376, :nth 45, :damp 5}
+;;     {:guess 1.0573461053785946, :nth 46, :damp 5}
+;;     {:guess 1.056087920015785, :nth 47, :damp 5}
+;;     {:guess 1.05489180771415, :nth 48, :damp 5}
+;;     {:guess 1.053743569993768, :nth 49, :damp 5}
+;;     {:guess 1.052634252738676, :nth 50, :damp 5}
+;;     {:guess 1.0515827549327312, :nth 51, :damp 5}
+;;     {:guess 1.0505588985637766, :nth 52, :damp 5}
+;;     {:guess 1.049582508888288, :nth 53, :damp 5}
+;;     {:guess 1.048648998313552, :nth 54, :damp 5}
+;;     {:guess 1.047743634094918, :nth 55, :damp 5}
+;;     {:guess 1.046871811011422, :nth 56, :damp 5}
+;;    {:guess 1.046023098273773, :nth 57, :damp 5}
+;;     {:guess 1.0452200864453416, :nth 58, :damp 5}
+;;     {:guess 1.0444283188731014, :nth 59, :damp 5}
+;;     {:guess 1.0436802048874596, :nth 60, :damp 5}
+;;     {:guess 1.0429493644133796, :nth 61, :damp 5}
+;;     {:guess 1.0422426554603408, :nth 62, :damp 5}
+;;    {:guess 1.0415537939042658, :nth 63, :damp 6})
+
+;; Relationship seems to be min-damp = log2 nth
+
+(nth-root-damped 11 3)
+;; => 2.22398319382933
+
+
+;; Exercise 1.46
+(defn iterative-improve [good-enough? iterative-improve]
+  (fn [guess]
+    (if (good-enough? guess)
+      guess
+      (recur (iterative-improve guess)))))
+
+(defn sqrt [x]
+  ((iterative-improve
+    (fn [guess]
+      (good-enough? guess x))
+    (fn [guess]
+      (improve guess x)))
+   1.0))
+
+(sqrt 11.0)
+
+(defn iterative-fixed-point [f first-guess]
+  (defn close-enough? [guess next]
+    (< (abs (- guess next))
+       **tolerance**))
+
+  (defn improve-guess [guess]
+    (f guess))
+
+  (defn compute [guess]
+    (let [next (improve-guess guess)]
+      (if (close-enough? guess next)
+        next
+        (recur next))))
+
+  (compute first-guess))
+
+(defn sqrt-fixed-point [x]
+  (iterative-fixed-point
+   (average-damp #(/ x %1))
+   1.0))
+
+(sqrt-fixed-point 11.0)
+;; => 3.3166247903554
