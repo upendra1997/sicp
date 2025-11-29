@@ -1233,7 +1233,7 @@
 ;; => -0.5872139151569291
 
 
-(java.lang.Math/tan 100)
+(Math/tan 100)
 ;; => -0.5872139151569291
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1311,11 +1311,11 @@
 
 
 ;; Excercise 1.41
-(defn double [f]
+(defn dble [f]
   (fn [x]
     (f (f x))))
 
-(((double (double double)) inc) 5)
+(((dble (dble dble)) inc) 5)
 ;; => 21
 
 
@@ -1331,3 +1331,19 @@
 
 ((repeated square 2) 5)
 ;; => 625
+
+
+;; Excercise 1.44
+(defn mean [coll]
+  (/ (reduce + 0 coll) (count coll)))
+
+(defn smooth [f]
+  (fn [x]
+    (mean
+     (f (- x **tolerance**))
+     (f x)
+     (f (+ x **tolerance**)))))
+
+
+(defn n-fold-smooth [f n]
+  (repeated smooth n))
