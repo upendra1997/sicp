@@ -138,3 +138,62 @@
         length-x (- max-x min-x)
         length-y (- max-y min-y)]
     (+ length-x length-y)))
+
+(defn cons'' [x y]
+  (fn [m]
+    (cond
+      (= m 0) x
+      (= m 1) y
+      :else (throw (ex-info "Incorrect argument for selector" {:selector m})))))
+
+
+(defn car'' [z] (z 0))
+
+(defn cdr'' [z] (z 1))
+
+;; Exercise 2.4
+
+(defn cons' [x y]
+  (fn [m] (m x y)))
+
+(defn car' [z] (z (fn [x y] x)))
+
+(defn cdr' [z] (z (fn [x y] y)))
+
+;; Exercise 2.5
+(defn cons''' [a b]
+  (* (Math/pow 2 a) (Math/pow 3 b)))
+
+(defn keep-dividing [n d]
+  (->> (iterate #(/ %1 d) (int n))
+       (take-while #(= (int %1) %1))
+       (rest)))
+
+(defn car''' [pair]
+  (count (keep-dividing pair 2)))
+
+(defn cdr''' [pair]
+  (count (keep-dividing pair 3)))
+
+(let [res (cons''' 12 3)]
+  [(car''' res) (cdr''' res)])
+
+;; Exercise 2.6
+;; Church Numerals
+(defn zero [f]
+  (fn [x] x))
+
+(defn add-1 [n]
+  (fn [f]
+    (fn [x]
+      (f ((n f) x)))))
+
+;; by manually expanding these formulas
+
+(defn one [f]
+  (fn [x]
+    (f x)))
+
+(defn two [f]
+  (fn [x]
+    (f (f x))))
