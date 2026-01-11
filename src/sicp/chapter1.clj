@@ -114,6 +114,8 @@
 (defn average [x y] (/ (+ x y) 2))
 (defn improve [guess x] (average guess (/ x guess)))
 
+(def ^:dynamic **tolerance** 0.00001)
+
 (defn good-enough? [guess x]
   (< (abs (- (square guess) x)) **tolerance**))
 
@@ -1141,8 +1143,6 @@
 #_(f f)
 ;Execution error (ClassCastException) at sicp.chapter1/f (chapter1.clj:1).
 ;java.lang.Long cannot be cast to clojure.lang.IFn
-
-(def ^:dynamic **tolerance** 0.00001)
 
 (defn close-enough? [x y] (< (abs (- x y)) **tolerance**))
 
