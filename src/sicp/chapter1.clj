@@ -1192,11 +1192,13 @@
 
 (fixed-point #(Math/cos %1) 1.0)
 (fixed-point #(+ (Math/sin %1) (Math/cos %1)) 1.0)
-(defn sqrt [x] (fixed-point #(average %1 (/ x %1)) 1.0))
-(sqrt 2)
+(defn sqrt' [x] (fixed-point #(average %1 (/ x %1)) 1.0))
+(sqrt' 2)
 
 ;; Exercise 1.35
 (def phi (fixed-point #(+ 1 (/ 1.0 %1)) 1.0))
+;;=> 1.6180327868852458
+
 
 ;; Exercise 1.36
 (println (fixed-point #(/ (Math/log 1000) (Math/log %1)) 2)) ;; 35 steps
@@ -1501,3 +1503,37 @@
 
 (sqrt-fixed-point 11.0)
 ;; => 3.3166247903554
+
+;; Exercise 1.37
+(defn cont-frac' [n d k i]
+  (cond (= k i) (/ (n i) (d i))
+        :else   (/ (n i) (+ (d i) (cont-frac' n d k (+ i 1))))))
+
+(defn cont-frac [n d k]
+  (cont-frac' n d k 1))
+
+;; 1/golden-ration
+(cont-frac (constantly 1.0) (constantly 1.0) 11)
+;; => 0.6180555555555556
+
+(defn cont-frac-iter
+  [n d k]
+  (reduce (fn [result term]
+            (/ (n term)
+               (+ (d term) result)))
+          0
+          (range k 0 -1)))
+
+;; 1/golden-ration
+(cont-frac-iter (constantly 1.0) (constantly 1.0) 11)
+;; => 0.6180555555555556
+
+(defn e-approx [k]
+  (let [n (constantly 1)
+        d-stream (cons 1 (interleave (iterate (partial + 2) 2) (repeat 1) (repeat 1)))
+        d #(nth d-stream %1)]
+    (println (take 10 d-stream))
+    (cont-frac-iter n d k)))
+
+
+(e-approx 100)
