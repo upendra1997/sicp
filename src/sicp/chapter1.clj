@@ -113,7 +113,7 @@
 ;; 0
 
 (defn average [x y] (/ (+ x y) 2))
-(defn improve [x guess] (average guess (/ x guess)))
+(defn improve [guess x] (average guess (/ x guess)))
 
 (def ^:dynamic **tolerance** 0.00001)
 
@@ -128,21 +128,11 @@
 ;;  null
 ;; seems to be stuck in loop as it uses applicative order evalution and as function it will evaluate both of them, and we know that at certain point we don't have to improve square root, but the function will keep evaluating both argyments, the guess and the improved value.
 
-(defn sqrt-iter [x guess] (if (good-enough? x guess)
+(defn sqrt-iter [guess x] (if (good-enough? guess x)
                             guess
-                            (recur x (improve x guess))))
+                            (sqrt-iter (improve guess x) x)))
 
-(defn sqrt-iter' [x guess] (take-while
-                            (comp not (partial good-enough? x))
-                            (iterate (partial improve x) guess)))
-
-(defn sqrt' [x] (last (sqrt-iter' x 1.0)))
-
-(sqrt-iter' 10 1.0)
-(sqrt-iter 10 1.0)
-
-(defn sqrt [x] (sqrt-iter x 1.0))
-(sqrt' 10)
+(defn sqrt [x] (sqrt-iter 1.0 x))
 
 ;; 1.7
 ;; sicp.core=> (sqrt 99999999999)
@@ -158,8 +148,8 @@
 ;; sicp.core=> (* 0.03129261341049664 0.03129261341049664)
 ;; 9.792276540587942E-4
 
-(defn good-enough? [x guess]
-  (< (abs (- (improve x guess) guess)) (* guess 0.001)))
+(defn good-enough? [guess x]
+  (< (abs (- (improve guess x) guess)) (* guess 0.001)))
 
 ;; worked very well for small numbers, but for large numbers, but for large numbers, previous strategy was better as it gives mixed result.
 ;; sicp.core=> (sqrt 99999999999)
@@ -181,7 +171,7 @@
 ;; 10001.428128408621 ;; prev
 
 ;; 1.8
-(defn improve [x guess] (/ (+ (/ x (square guess)) (* 2 guess)) 3))
+(defn improve [guess x] (/ (+ (/ x (square guess)) (* 2 guess)) 3))
 (def cuberoot sqrt)
 ;; sicp.core=> (cuberoot 27)
 ;; 3.001274406506175
@@ -1151,8 +1141,7 @@
 ;=> 4
 (f #(* %1 (+ %1 1)))
 ;=> 6
-
-;; (f f)
+#_(f f)
 ;Execution error (ClassCastException) at sicp.chapter1/f (chapter1.clj:1).
 ;java.lang.Long cannot be cast to clojure.lang.IFn
 
