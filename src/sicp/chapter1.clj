@@ -1,4 +1,5 @@
-(ns sicp.chapter1)
+(ns sicp.chapter1
+  (:refer-clojure :exclude [abs]))
 
 (def pi 3.14159)
 (defn area-circle [radius] (* radius radius pi))
@@ -1528,12 +1529,11 @@
 (cont-frac-iter (constantly 1.0) (constantly 1.0) 11)
 ;; => 0.6180555555555556
 
-(defn e-approx [k]
-  (let [n (constantly 1)
-        d-stream (cons 1 (interleave (iterate (partial + 2) 2) (repeat 1) (repeat 1)))
-        d #(nth d-stream %1)]
-    (println (take 10 d-stream))
-    (cont-frac-iter n d k)))
-
-
-(e-approx 100)
+;; (defn e-approx [k]
+;;   (let [n (constantly 1)
+;;         d-stream (cons 1 (interleave (iterate (partial + 2) 2) (repeat 1) (repeat 1)))
+;;         d #(nth d-stream %1)]
+;;     (println (take 10 d-stream))
+;;     (cont-frac-iter n d k)))
+;; 
+;; (e-approx 100)
