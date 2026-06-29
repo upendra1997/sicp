@@ -1069,7 +1069,7 @@
                                       (+ (* 2 n) 1))))]
                (* 2 (product term 1.0 inc n))))
 
-(pi 100000)
+(def pi' (pi 100000))
 
 ;; Exercise 1.32
 (defn accumulate [combiner empty term a next b]
@@ -1518,11 +1518,21 @@
 (cont-frac-iter (constantly 1.0) (constantly 1.0) 11)
 ;; => 0.6180555555555556
 
-;; (defn e-approx [k]
-;;   (let [n (constantly 1)
-;;         d-stream (cons 1 (interleave (iterate (partial + 2) 2) (repeat 1) (repeat 1)))
-;;         d #(nth d-stream %1)]
-;;     (println (take 10 d-stream))
-;;     (cont-frac-iter n d k)))
-;; 
-;; (e-approx 100)
+(defn e-approx [k]
+  (let [n (constantly 1.0)
+        d-stream (cons 1.0 (interleave (iterate (partial + 2) 2.0) (repeat 1.0) (repeat 1.0)))
+        d #(nth d-stream (- %1 1))]
+    (cont-frac-iter n d k)))
+
+(+ 2 (e-approx 1000))
+;; => 2.7182818284590455
+
+(defn tan-approx [x k]
+  (let [n-stream (cons (* 1.0 x) (repeat (* -1.0 x x)))
+        d-stream (iterate (partial + 2) 1)
+        n #(nth n-stream (- %1 1))
+        d #(nth d-stream (- %1 1))]
+    (cont-frac-iter n d k)))
+
+(tan-approx (/ pi' 4) 100)
+;; => 0.9999960730413242
