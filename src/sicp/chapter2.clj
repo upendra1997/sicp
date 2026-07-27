@@ -252,7 +252,6 @@
     (make-interval -1 -1)
     b)))
 
-
 ;; Exercise 2.11
 ;; Case where mulitply would require two mulitplaction, and somehow the order of multipication may not be sorted or easily trackable, so that would required more than two mulitiplication and we would need to find which is the bigger interval
 ;; a = [-2 5]
@@ -288,7 +287,7 @@
 ;; res = xy + xdy + ydx
 ;; res = xy + dRes
 ;; dRes = xdy + ydx
-;; dRes/res = (xdy + ydx) /  (xy(
+;; dRes/res = (xdy + ydx) / xy
 ;; dRes/res = dy/y + dx/x
 ;; Error percentage
 
@@ -435,7 +434,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn count-leaves [xs]
-  (cond (empty? xs) nil
+  (cond ;; (empty? xs) 0 ;; Not required;; anti pattern for checking the emptiness of seq
         (not (seq? xs)) 1
         :else (->> xs
                    (map count-leaves)
@@ -649,5 +648,32 @@
 
 ;; Exercise 2.34
 (defn horner-eval [x l]
-  (reduce (fn [higher-terms coeff]
-            (* higher-terms coeff))))
+  (reduce (fn [res coeff]
+            (+ (* res x) coeff))
+          0
+          (reverse l)))
+
+(horner-eval 2 [1 3 0 5 0 1])
+;; => 79
+
+;; Exercise 2.34
+(defn count-leaves'
+  [xs]
+    (reduce + 0 (map #(if (seq? %1) (count-leaves' %1) 1) xs)))
+
+(count-leaves' (list 1 (list 2 (list 3 4))))
+;; => 4
+
+;; Exercise 2.36
+(defn accumulate-n
+  [op init seqs]
+  (cond (not (seq? seqs)) nil
+        (empty? (first seqs)) nil
+    :else (cons (reduce op init (map first seqs))
+          (accumulate-n op init (map rest seqs)))))
+
+(comment
+  (def ll '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
+  (accumulate-n + 0 ll)
+  ;; => (22 26 30)
+  )
