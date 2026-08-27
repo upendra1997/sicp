@@ -4,7 +4,7 @@
   (+ (* a x) (* b y)))
 
 #_(defn linear-combination [a b x y]
-  (add (mul a x) (mul b y)))
+    (add (mul a x) (mul b y)))
 
 ;; Exercise 2.1
 (defn make-rat [num den]
@@ -96,7 +96,7 @@
   (cons left-point (cons right-point nil)))
 
 (defn min-point [rectangle]
- (let [lp (first rectangle)
+  (let [lp (first rectangle)
         rp (second rectangle)
         x1 (x-point lp)
         y1 (y-point lp)
@@ -104,10 +104,10 @@
         y2 (y-point rp)
         min-x (min x1 x2)
         min-y (min y1 y2)]
-    (make-point min-x min-y)) )
+    (make-point min-x min-y)))
 
 (defn max-point [rectangle]
- (let [lp (first rectangle)
+  (let [lp (first rectangle)
         rp (second rectangle)
         x1 (x-point lp)
         y1 (y-point lp)
@@ -115,7 +115,7 @@
         y2 (y-point rp)
         max-x (max x1 x2)
         max-y (max y1 y2)]
-    (make-point max-x max-y)) )
+    (make-point max-x max-y)))
 
 (defn rectangle-area [rectangle]
   (let [mx       (max-point rectangle)
@@ -296,10 +296,10 @@
 (comment
   (def aa (make-center-percentage 1 0.05))
 
-;;If we divide same aa/aa; we get 1 but that's not the case when we divide the intervals
+  ;;If we divide same aa/aa; we get 1 but that's not the case when we divide the intervals
   (div-interval aa aa)
-;; => (0.9974999999999999 1.0025062656641603)
-)
+  ;; => (0.9974999999999999 1.0025062656641603)
+  )
 
 ;; Exercise 2.15/2.16
 ;; https://eli.thegreenplace.net/2007/07/27/sicp-section-214
@@ -353,11 +353,11 @@
 ;; Exercise 2.20
 (defn same-parity [& args]
   (if (empty? args) '()
-        (let [head   (first args)
-              result (->> (rest args)
-                          (drop-while
-                           (comp not #(= (mod %1 2) (mod head 2)))))]
-          (cons head (apply same-parity result)))))
+      (let [head   (first args)
+            result (->> (rest args)
+                        (drop-while
+                         (comp not #(= (mod %1 2) (mod head 2)))))]
+        (cons head (apply same-parity result)))))
 
 (same-parity 1 2 3 4 5 6 7)
 ;; => (1 3 5 7)
@@ -435,10 +435,10 @@
 
 (defn count-leaves [xs]
   (cond ;; (empty? xs) 0 ;; Not required;; anti pattern for checking the emptiness of seq
-        (not (seq? xs)) 1
-        :else (->> xs
-                   (map count-leaves)
-                   (reduce + 0))))
+    (not (seq? xs)) 1
+    :else (->> xs
+               (map count-leaves)
+               (reduce + 0))))
 
 ;; Exercise 2.24
 ;; (list 1 (list 2 (list 3 4)))
@@ -453,24 +453,23 @@
   (def b (list (list 7)))
   (def c (list 1 (list 2 (list 3 (list 4 (list 5 (list 6 7)))))))
 
-(->> a
-     (rest)
-     (rest)
-     (first)
-     (second))
+  (->> a
+       (rest)
+       (rest)
+       (first)
+       (second))
 
-(->> b
-     (first)
-     (first))
+  (->> b
+       (first)
+       (first))
 
-(->> c
-     (second)
-     (second)
-     (second)
-     (second)
-     (second)
-     (second))
-)
+  (->> c
+       (second)
+       (second)
+       (second)
+       (second)
+       (second)
+       (second)))
 
 ;; Exercise 2.26
 (comment
@@ -485,7 +484,7 @@
 
   (list x y)
   ;; => ((1 2 3) (4 5 6))
-)
+  )
 
 ;; Exercise 2.27
 (defn deep-reverse [xs]
@@ -498,8 +497,7 @@
 
   (reverse x)
 
-  (deep-reverse x)
-)
+  (deep-reverse x))
 
 ;; Exercise 2.28
 (defn fringe [xs]
@@ -514,8 +512,7 @@
 
   (fringe x)
 
-  (fringe (list x x))
-)
+  (fringe (list x x)))
 
 ;; Exercise 2.29
 (def make-mobile list)
@@ -584,7 +581,7 @@
 
   (balanced? m''')
   ;; => false
-)
+  )
 
 ;; We don't have to change our program, because in clojure list of two elements is still equal to cons x (cons y nil)
 
@@ -659,7 +656,7 @@
 ;; Exercise 2.34
 (defn count-leaves'
   [xs]
-    (reduce + 0 (map #(if (seq? %1) (count-leaves' %1) 1) xs)))
+  (reduce + 0 (map #(if (seq? %1) (count-leaves' %1) 1) xs)))
 
 (count-leaves' (list 1 (list 2 (list 3 4))))
 ;; => 4
@@ -669,11 +666,91 @@
   [op init seqs]
   (cond (not (seq? seqs)) nil
         (empty? (first seqs)) nil
-    :else (cons (reduce op init (map first seqs))
-          (accumulate-n op init (map rest seqs)))))
+        :else (cons (reduce op init (map first seqs))
+                    (accumulate-n op init (map rest seqs)))))
 
 (comment
   (def ll '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
   (accumulate-n + 0 ll)
   ;; => (22 26 30)
+  )
+
+;; Exercise 2.37
+(defn dot-product [v w]
+  (reduce + 0 (map * v w)))
+
+(defn matrix-*-vector [m v]
+  (map #(dot-product v %1) m))
+
+(comment
+  (def m '((1 2 3) (4 5 6) (7 8 9)))
+  (def v '(1 2 3))
+  (matrix-*-vector m v)
+  ;; => (14 32 50)
+  )
+
+(defn transpose [m]
+  (accumulate-n #(concat %1 (list %2)) nil m))
+
+(comment
+  (def m '((1 2 3) (4 5 6) (7 8 9)))
+  (transpose m)
+  ;; => ((1 4 7) (2 5 8) (3 6 9))
+  )
+
+
+(defn matrix-*-matrix [m n]
+  (let [cols (transpose n)]
+    (map (partial matrix-*-vector cols) m)))
+
+(comment
+  (def m '((1 2 3) (4 5 6) (7 8 9)))
+  (def n '((1 2 3) (4 5 6) (7 8 9)))
+  (matrix-*-matrix m n)
+  ;; => ((30 36 42) (66 81 96) (102 126 150))
+  )
+
+
+;; Ex 2.8
+;; It's called commutative property, i.e. a + b = b + a, a * b = b * a
+;; (define (fold-left op initial sequence)
+;; (define (iter result rest)
+;;   (if (null? rest)
+;;     result
+;;     (iter (op result (car rest))
+;;       (cdr rest))))
+;; (iter initial sequence))
+
+(def fold-left reduce)
+
+(defn fold-right [f init coll]
+  (if (seq coll)
+    (f (first coll) (fold-right f init (rest coll)))
+    init))
+
+;; (fold-right / 1 (list 1 2 3))
+;; 3/2
+
+;; (fold-left / 1 (list 1 2 3))
+;; 1/6
+
+;; (fold-right list nil (list 1 2 3))
+;; (1 (2 (3 nil)))
+
+;; (fold-left list nil (list 1 2 3))
+;; (((nil 1) 2) 3)
+
+
+;; Ex 2.39
+(defn reverse-right [l]
+  (fold-right #(concat %2 (list %1)) nil l))
+
+(defn reverse-left [l]
+  (fold-left #(cons %2 %1) nil l))
+
+(comment
+  (reverse-left (list 1 2 3))
+  ;;=> (3 2 1)
+  (reverse-right (list 1 2 3))
+  ;;=> (3 2 1)
   )
