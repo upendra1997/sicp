@@ -1,4 +1,5 @@
-(ns sicp.chapter2)
+(ns sicp.chapter2
+  (:require [sicp.chapter1 :as chap1]))
 
 (defn linear-combination [a b x y]
   (+ (* a x) (* b y)))
@@ -754,3 +755,78 @@
   (reverse-right (list 1 2 3))
   ;;=> (3 2 1)
   )
+
+;; Ex 2.40
+(defn unique-pairs [n]
+  (for [i (range 1 (inc n))
+        j (range 1 i)]
+    [i j]))
+
+(defn prime-sum? [[x y]]
+  (chap1/prime? (+ x y)))
+
+(defn prime-sum-pairs [n]
+  (let [up (unique-pairs n)]
+    (->> up
+         (filter prime-sum?)
+         (map #(conj %1 (reduce + 0 %1))))))
+
+
+(comment
+  (prime-sum-pairs 6)
+  ;;=> ([2 1 3] [3 2 5] [4 1 5] [4 3 7] [5 2 7] [6 1 7] [6 5 11])
+  )
+
+;; ex 2.41
+(defn find-ordered-triplets [n s]
+  (for [i (range 1 (inc n))
+        j (range 1 i)
+        k (range 1 j)
+        :when (and
+               (not= i j k)
+               (= (+ i j k) s))]
+    [i j k]))
+
+(find-ordered-triplets 10 10)
+;;=> ([5 3 2] [5 4 1] [6 3 1] [7 2 1])
+
+;; ex 2.42
+(defn queens [board-size]
+  (defn safe? [positions]
+    (let [rc           (map #(identity [%1 %2]) positions (range board-size))
+          [rest laast] (split-at (dec (count positions)) rc)
+          [x y]         (first laast)]
+      (and (= (count positions) (count (set positions)))
+           (not (some (fn [[nx ny]]
+                        (= (abs (- nx x))
+                           (abs (- ny y))))
+                      rest))))
+    )
+  (defn queen-cols [k]
+    (if (= k 0)
+      [[]]
+      (for [rest-of-board (queen-cols (dec k))
+            position      (range board-size)
+            :let          [result (conj rest-of-board position)]
+            :when         (safe? result)]
+        result)))
+  (queen-cols board-size))
+
+(comment
+  (take 10 (queens 8))
+  ;;=> ([0 4 7 5 2 6 1 3]
+  ;;    [0 5 7 2 6 3 1 4]
+  ;;    [0 6 3 5 7 1 4 2]
+  ;;    [0 6 4 7 1 3 5 2]
+  ;;    [1 3 5 7 2 0 6 4]
+  ;;    [1 4 6 0 2 7 5 3]
+  ;;    [1 4 6 3 0 7 5 2]
+  ;;    [1 5 0 6 3 7 2 4]
+  ;;    [1 5 7 2 0 3 6 4]
+  ;;    [1 6 2 5 7 4 0 3])
+  )
+
+;; ex 2.43
+;; the queen-cols function is inside the innermost loop :(
+;; so if the queen thing takes times T
+;; so then the loop would be (n-1)!T (very slow)
