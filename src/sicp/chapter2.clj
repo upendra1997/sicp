@@ -1,5 +1,6 @@
 (ns sicp.chapter2
-  (:require [sicp.chapter1 :as chap1]))
+  (:require [sicp.chapter1 :as chap1]
+            [sicp.pictureLang :as pict]))
 
 (defn linear-combination [a b x y]
   (+ (* a x) (* b y)))
@@ -800,8 +801,7 @@
            (not (some (fn [[nx ny]]
                         (= (abs (- nx x))
                            (abs (- ny y))))
-                      rest))))
-    )
+                      rest)))))
   (defn queen-cols [k]
     (if (= k 0)
       [[]]
@@ -830,3 +830,304 @@
 ;; the queen-cols function is inside the innermost loop :(
 ;; so if the queen thing takes times T
 ;; so then the loop would be (n-1)!T (very slow)
+
+;; ex 2.46
+
+(defn make-vect [x y]
+  {:x x :y y})
+
+(defn add-vect [v1 v2]
+  (make-vect (+ (:x v1) (:x v2))
+             (+ (:y v1) (:y v2))))
+
+(defn scale-vect [s v]
+  (make-vect (* s (:x v))
+             (* s (:y v))))
+
+(defn sub-vect [v1 v2]
+  (make-vect (- (:x v1) (:x v2))
+             (- (:y v1) (:y v2))))
+
+;; ex 2.47
+(defn make-frame [origin edge1 edge2]
+  {:origin origin
+   :edge1 edge1
+   :edge2 edge2})
+
+(defn frame-coord-map [frame]
+  (fn [v]
+    (add-vect
+     (:origin frame)
+     (add-vect (scale-vect (:x v) (:edge1 frame))
+               (scale-vect (:y v) (:edge2 frame))))))
+
+;; ex 2.48
+(defn make-segment [start end]
+  {:start start :end end})
+
+(defn segments->painter [segments]
+  (fn [frame]
+    (let [m (frame-coord-map frame)]
+      (doseq [segment segments]
+        (pict/draw-line
+         (m (:start segment))
+         (m (:end segment)))))))
+
+#_(defn file->painter [file-name origin size]
+    (fn [frame]
+      (let [m (frame-coord-map frame)]
+        (pict/draw-img file-name (m origin) (m size)))))
+
+#_(def rogers
+    (file->painter
+     "img/william-barton-rogers.jpg"
+     (make-vect 0.0 0.0)
+     (make-vect 1.0 1.0)))
+
+;; ex 2.49
+(def outline
+  (segments->painter
+   [(make-segment (make-vect 0.0 0.0) (make-vect 0.0 1.0))
+    (make-segment (make-vect 0.0 0.0) (make-vect 1.0 0.0))
+    (make-segment (make-vect 1.0 1.0) (make-vect 0.0 1.0))
+    (make-segment (make-vect 1.0 1.0) (make-vect 1.0 0.0))]))
+
+(def cross
+  (segments->painter
+   [(make-segment (make-vect 0.0 0.0) (make-vect 1.0 1.0))
+    (make-segment (make-vect 1.0 0.0) (make-vect 0.0 1.0))]))
+
+(def diamond
+  (segments->painter
+   [(make-segment (make-vect 0.0 0.5) (make-vect 0.5 0.0))
+    (make-segment (make-vect 0.0 0.5) (make-vect 0.5 1.0))
+    (make-segment (make-vect 1.0 0.5) (make-vect 0.5 0.0))
+    (make-segment (make-vect 1.0 0.5) (make-vect 0.5 1.0))]))
+
+(def wave
+  (segments->painter [   ;; Head
+                      (make-segment (make-vect 0.40 1.00) (make-vect 0.35 0.85))
+                      (make-segment (make-vect 0.35 0.85) (make-vect 0.40 0.65))
+                      (make-segment (make-vect 0.40 0.65) (make-vect 0.60 0.65))
+                      (make-segment (make-vect 0.60 0.65) (make-vect 0.65 0.85))
+                      (make-segment (make-vect 0.65 0.85) (make-vect 0.60 1.00))
+
+                      ;; Left Arm / Upper Torso
+                      (make-segment (make-vect 0.35 0.85) (make-vect 0.15 0.60))
+                      (make-segment (make-vect 0.15 0.60) (make-vect 0.00 0.85))
+                      (make-segment (make-vect 0.00 0.65) (make-vect 0.15 0.40))
+                      (make-segment (make-vect 0.15 0.40) (make-vect 0.30 0.60))
+
+                      ;; Right Arm / Upper Torso
+                      (make-segment (make-vect 0.65 0.85) (make-vect 0.85 0.60))
+                      (make-segment (make-vect 0.85 0.60) (make-vect 1.00 0.35))
+                      (make-segment (make-vect 1.00 0.15) (make-vect 0.85 0.45))
+                      (make-segment (make-vect 0.85 0.45) (make-vect 0.70 0.60))
+
+                      ;; Torso and Left Leg
+                      (make-segment (make-vect 0.30 0.60) (make-vect 0.35 0.50))
+                      (make-segment (make-vect 0.35 0.50) (make-vect 0.25 0.00))
+                      (make-segment (make-vect 0.40 0.00) (make-vect 0.50 0.30))
+
+                      ;; Right Leg and Lower Torso
+                      (make-segment (make-vect 0.50 0.30) (make-vect 0.60 0.00))
+                      (make-segment (make-vect 0.65 0.00) (make-vect 0.70 0.60))]))
+
+(pict/paint outline :file "img/border.png")
+(pict/paint cross :file "img/cross.png")
+(pict/paint diamond :file "img/diamond.png")
+(pict/paint wave :file "img/wave.png")
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn transform-painter [painter origin corner1 corner2]
+  (fn [frame]
+    (let [m (frame-coord-map frame)
+          new-origin (m origin)]
+      (painter (make-frame
+                new-origin
+                (sub-vect (m corner1) new-origin)
+                (sub-vect (m corner2) new-origin))))))
+
+(defn flip-vert [painter]
+  (transform-painter painter
+                     (make-vect 0.0 1.0) ; new origin 
+                     (make-vect 1.0 1.0) ; new end of edge1
+                     (make-vect 0.0 0.0))) ; new end of edge2
+
+(defn shrink-to-upper-right [painter]
+  (transform-painter
+   painter (make-vect 0.5 0.5)
+   (make-vect 1.0 0.5) (make-vect 0.5 1.0)))
+
+(defn rotate90 [painter]
+  (transform-painter painter
+                     (make-vect 1.0 0.0)
+                     (make-vect 1.0 1.0)
+                     (make-vect 0.0 0.0)))
+
+(defn squash-inwards [painter]
+  (transform-painter painter
+                     (make-vect 0.0 0.0)
+                     (make-vect 0.65 0.35)
+                     (make-vect 0.35 0.65)))
+
+(defn beside [painter1 painter2]
+  (let [split-point (make-vect 0.5 0.0)
+        paint-left (transform-painter
+                    painter1
+                    (make-vect 0.0 0.0)
+                    split-point
+                    (make-vect 0.0 1.0))
+        paint-right (transform-painter
+                     painter2
+                     split-point
+                     (make-vect 1.0 0.0)
+                     (make-vect 0.5 1.0))]
+    (fn [frame]
+      (paint-left frame)
+      (paint-right frame))))
+
+;; ex 2.50
+(def flip-horiz
+  (comp rotate90 rotate90 flip-vert))
+
+(def rotate180
+  (comp rotate90 rotate90))
+
+(def rotate270
+  (comp rotate180 rotate90))
+
+(def example1
+  (beside
+   (squash-inwards wave)
+   (shrink-to-upper-right wave)))
+
+(pict/paint example1 :file "img/ex1.png")
+
+(def example2 (flip-horiz example1))
+
+(pict/paint example2 :file "img/ex2.png")
+
+(def example3 (rotate270 example2))
+
+(pict/paint example3 :file "img/ex3.png")
+
+;; ex 2.51
+(defn below [painter1 painter2]
+  (let [split-point (make-vect 0.0 0.5)
+        paint-top (transform-painter
+                   painter1
+                   split-point
+                   (make-vect 1.0 0.5)
+                   (make-vect 0.0 1.0))
+        paint-bottom (transform-painter
+                      painter2
+                      (make-vect 0.0 0.0)
+                      (make-vect 1.0 0.0)
+                      split-point)]
+    (fn [frame]
+      (paint-top frame)
+      (paint-bottom frame))))
+
+(defn below' [painter1 painter2]
+  (rotate90
+   (beside
+    (rotate270 painter2)
+    (rotate270 painter1))))
+
+(def example4
+  (below
+   (rotate90 wave)
+   wave))
+
+(def example5
+  (below'
+   (rotate90 wave)
+   wave))
+
+(pict/paint example4 :file "img/ex4.png")
+(pict/paint example5 :file "img/ex5.png")
+
+;; Ex 2.52
+(defn overlay [painter1 painter2]
+  (fn [frame]
+    (painter1 frame)
+    (painter2 frame)))
+
+(def wave-box
+  (overlay
+   outline
+   wave))
+
+(pict/paint wave-box :file "img/wave-box.png")
+
+;; ex 2.44
+(defn right-split [painter n]
+  (if (= n 0)
+    painter
+    (let [smaller (right-split painter (- n 1))]
+      (beside painter (below smaller smaller)))))
+
+(defn up-split [painter n]
+  (if (= n 0)
+    painter
+    (let [smaller (up-split painter (- n 1))]
+      (below painter (beside smaller smaller)))))
+
+;; ex 2.45
+
+(defn split [outer-order recurse-order]
+  (fn [painter n]
+    (if (= n 0) painter
+        (let [smaller ((split outer-order recurse-order) painter (- n 1))]
+          (outer-order painter (recurse-order smaller smaller))))))
+
+(defn corner-split [painter n]
+  (if (= n 0)
+    painter
+    (let [up (up-split painter (- n 1))
+          right (right-split painter (- n 1))
+          top-left (beside up up)
+          bottom-right (below right right)
+          corner (corner-split painter (- n 1))]
+      (beside (below painter top-left)
+              (below bottom-right corner)))))
+
+;; ex 2.52 a
+
+(defn square-limit [painter n]
+  (let [quarter (corner-split painter n)
+        half (beside (flip-horiz quarter) quarter)]
+    (below (flip-vert half) half)))
+
+(def ex6 (square-limit wave 2))
+(pict/paint ex6 :file "img/ex6.png")
+
+;; (def ex7 rogers)
+;; (pict/paint ex7 :file "img/ex7.png")
+
+
+;; ex 2.52 b
+
+(def right-split' (split beside below))
+(def up-split' (split below beside))
+
+(defn corner-split' [painter n]
+  (if (= n 0)
+    painter
+    (let [up (up-split' painter (- n 1))
+          right (right-split' painter (- n 1))
+          corner (corner-split' painter (- n 1))]
+      (beside (below painter (flip-vert up))
+              (below (flip-horiz right) (rotate90 corner))))))
+;; ex 2.52 c 
+
+(defn square-limit' [painter n]
+  (let [quarter (corner-split' painter n)
+        half (beside (flip-horiz quarter) quarter)]
+    (below (flip-vert half) half)))
+
+(def ex7 (square-limit' wave 2))
+(pict/paint ex7 :file "img/ex7.png")
