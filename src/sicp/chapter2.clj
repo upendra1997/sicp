@@ -1271,25 +1271,45 @@
 (defn exponent [e]
   (caddr e))
 
+(defn simplify [expr]
+  (if (and (seq? expr)
+           (some (partial = (car expr)) ['* '+ '**]))
+    expr
+    (cond (not (seq? expr)) expr
+          (memq '+ expr) (let [[a1 a2] (split-with (partial not= '+) expr)]
+                           (make-sum (simplify a1)
+                                     (simplify (rest a2))))
+          (memq '* expr) (let [[m1 m2] (split-with (partial not= '*) expr)]
+                           (make-product
+                            (simplify m1)
+                            (simplify (rest m2))))
+          (memq '** expr) (let [[u n] (split-with (partial not= '**) expr)]
+                            (make-exponent
+                             (simplify u)
+                             (simplify (rest n))))
+          (and (coll? expr)
+               (= 1 (count expr))) (simplify (first expr))
+          :else expr)))
 
 (defn deriv [exp var]
-  (cond (number? exp) 0
-        (variable? exp) (if (same-variable? exp var) 1 0)
-        (sum? exp) (make-sum (deriv (addend exp) var)
-                             (deriv (augend exp) var))
-        (product? exp) (make-sum
-                        (make-product (multiplier exp)
-                                      (deriv (multiplicand exp) var))
-                        (make-product (deriv (multiplier exp) var)
-                                      (multiplicand exp)))
-        (exponentiation? exp) (make-product
-                               (make-product
-                                (exponent exp)
-                                (make-exponent
-                                 (base exp)
-                                 (make-sum (exponent exp) -1)))
-                               (deriv (base exp) var))
-        :else (throw (ex-info "unknown expression type: DERIV" {:expr exp}))))
+  (let [exp (simplify exp)]
+    (cond (number? exp) 0
+          (variable? exp) (if (same-variable? exp var) 1 0)
+          (sum? exp) (make-sum (deriv (addend exp) var)
+                               (deriv (augend exp) var))
+          (product? exp) (make-sum
+                          (make-product (multiplier exp)
+                                        (deriv (multiplicand exp) var))
+                          (make-product (deriv (multiplier exp) var)
+                                        (multiplicand exp)))
+          (exponentiation? exp) (make-product
+                                 (make-product
+                                  (exponent exp)
+                                  (make-exponent
+                                   (base exp)
+                                   (make-sum (exponent exp) -1)))
+                                 (deriv (base exp) var))
+          :else (throw (ex-info "unknown expression type: DERIV" {:expr exp})))))
 
 (deriv '(+ x 3) 'x)
 ;;=> (+ 1 0)
@@ -1313,5 +1333,7 @@
 
 ;; ex 2.58
 (deriv '(x + (3 * (x + (y + 2)))) 'x)
+;;=> 4
 
 (deriv '(x + 3 * (x + (y + 2))) 'x)
+;;=> 4
