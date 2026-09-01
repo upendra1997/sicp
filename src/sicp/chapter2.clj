@@ -299,9 +299,9 @@
   (def aa (make-center-percentage 1 0.05))
 
   ;;If we divide same aa/aa; we get 1 but that's not the case when we divide the intervals
-  (div-interval aa aa)
-  ;; => (0.9974999999999999 1.0025062656641603)
-  )
+  (div-interval aa aa))
+;; => (0.9974999999999999 1.0025062656641603)
+
 
 ;; Exercise 2.15/2.16
 ;; https://eli.thegreenplace.net/2007/07/27/sicp-section-214
@@ -484,9 +484,9 @@
   (cons x y)
   ;; => ((1 2 3) 4 5 6)
 
-  (list x y)
-  ;; => ((1 2 3) (4 5 6))
-  )
+  (list x y))
+;; => ((1 2 3) (4 5 6))
+
 
 ;; Exercise 2.27
 (defn deep-reverse [xs]
@@ -581,9 +581,9 @@
              (make-branch 1 2)
              (make-branch 2 2)))
 
-  (balanced? m''')
-  ;; => false
-  )
+  (balanced? m'''))
+;; => false
+
 
 ;; We don't have to change our program, because in clojure list of two elements is still equal to cons x (cons y nil)
 
@@ -673,9 +673,9 @@
 
 (comment
   (def ll '((1 2 3) (4 5 6) (7 8 9) (10 11 12)))
-  (accumulate-n + 0 ll)
-  ;; => (22 26 30)
-  )
+  (accumulate-n + 0 ll))
+;; => (22 26 30)
+
 
 ;; Exercise 2.37
 (defn dot-product [v w]
@@ -687,18 +687,18 @@
 (comment
   (def m '((1 2 3) (4 5 6) (7 8 9)))
   (def v '(1 2 3))
-  (matrix-*-vector m v)
-  ;; => (14 32 50)
-  )
+  (matrix-*-vector m v))
+;; => (14 32 50)
+
 
 (defn transpose [m]
   (accumulate-n #(concat %1 (list %2)) nil m))
 
 (comment
   (def m '((1 2 3) (4 5 6) (7 8 9)))
-  (transpose m)
-  ;; => ((1 4 7) (2 5 8) (3 6 9))
-  )
+  (transpose m))
+;; => ((1 4 7) (2 5 8) (3 6 9))
+
 
 
 (defn matrix-*-matrix [m n]
@@ -708,9 +708,9 @@
 (comment
   (def m '((1 2 3) (4 5 6) (7 8 9)))
   (def n '((1 2 3) (4 5 6) (7 8 9)))
-  (matrix-*-matrix m n)
-  ;; => ((30 36 42) (66 81 96) (102 126 150))
-  )
+  (matrix-*-matrix m n))
+;; => ((30 36 42) (66 81 96) (102 126 150))
+
 
 
 ;; Ex 2.8
@@ -753,9 +753,9 @@
 (comment
   (reverse-left (list 1 2 3))
   ;;=> (3 2 1)
-  (reverse-right (list 1 2 3))
-  ;;=> (3 2 1)
-  )
+  (reverse-right (list 1 2 3)))
+;;=> (3 2 1)
+
 
 ;; Ex 2.40
 (defn unique-pairs [n]
@@ -774,9 +774,9 @@
 
 
 (comment
-  (prime-sum-pairs 6)
-  ;;=> ([2 1 3] [3 2 5] [4 1 5] [4 3 7] [5 2 7] [6 1 7] [6 5 11])
-  )
+  (prime-sum-pairs 6))
+;;=> ([2 1 3] [3 2 5] [4 1 5] [4 3 7] [5 2 7] [6 1 7] [6 5 11])
+
 
 ;; ex 2.41
 (defn find-ordered-triplets [n s]
@@ -813,18 +813,18 @@
   (queen-cols board-size))
 
 (comment
-  (take 10 (queens 8))
-  ;;=> ([0 4 7 5 2 6 1 3]
-  ;;    [0 5 7 2 6 3 1 4]
-  ;;    [0 6 3 5 7 1 4 2]
-  ;;    [0 6 4 7 1 3 5 2]
-  ;;    [1 3 5 7 2 0 6 4]
-  ;;    [1 4 6 0 2 7 5 3]
-  ;;    [1 4 6 3 0 7 5 2]
-  ;;    [1 5 0 6 3 7 2 4]
-  ;;    [1 5 7 2 0 3 6 4]
-  ;;    [1 6 2 5 7 4 0 3])
-  )
+  (take 10 (queens 8)))
+;;=> ([0 4 7 5 2 6 1 3]
+;;    [0 5 7 2 6 3 1 4]
+;;    [0 6 3 5 7 1 4 2]
+;;    [0 6 4 7 1 3 5 2]
+;;    [1 3 5 7 2 0 6 4]
+;;    [1 4 6 0 2 7 5 3]
+;;    [1 4 6 3 0 7 5 2]
+;;    [1 5 0 6 3 7 2 4]
+;;    [1 5 7 2 0 3 6 4]
+;;    [1 6 2 5 7 4 0 3])
+
 
 ;; ex 2.43
 ;; the queen-cols function is inside the innermost loop :(
@@ -933,10 +933,14 @@
                       (make-segment (make-vect 0.50 0.30) (make-vect 0.60 0.00))
                       (make-segment (make-vect 0.65 0.00) (make-vect 0.70 0.60))]))
 
-(pict/paint outline :file "img/border.png")
-(pict/paint cross :file "img/cross.png")
-(pict/paint diamond :file "img/diamond.png")
-(pict/paint wave :file "img/wave.png")
+(comment
+  (pict/paint outline :file "img/border.png"))
+(comment
+  (pict/paint cross :file "img/cross.png"))
+(comment
+  (pict/paint diamond :file "img/diamond.png"))
+(comment
+  (pict/paint wave :file "img/wave.png"))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1004,15 +1008,18 @@
    (squash-inwards wave)
    (shrink-to-upper-right wave)))
 
-(pict/paint example1 :file "img/ex1.png")
+(comment
+  (pict/paint example1 :file "img/ex1.png"))
 
 (def example2 (flip-horiz example1))
 
-(pict/paint example2 :file "img/ex2.png")
+(comment
+  (pict/paint example2 :file "img/ex2.png"))
 
 (def example3 (rotate270 example2))
 
-(pict/paint example3 :file "img/ex3.png")
+(comment
+  (pict/paint example3 :file "img/ex3.png"))
 
 ;; ex 2.51
 (defn below [painter1 painter2]
@@ -1047,8 +1054,10 @@
    (rotate90 wave)
    wave))
 
-(pict/paint example4 :file "img/ex4.png")
-(pict/paint example5 :file "img/ex5.png")
+(comment
+  (pict/paint example4 :file "img/ex4.png"))
+(comment
+  (pict/paint example5 :file "img/ex5.png"))
 
 ;; Ex 2.52
 (defn overlay [painter1 painter2]
@@ -1061,7 +1070,8 @@
    outline
    wave))
 
-(pict/paint wave-box :file "img/wave-box.png")
+(comment
+  (pict/paint wave-box :file "img/wave-box.png"))
 
 ;; ex 2.44
 (defn right-split [painter n]
@@ -1103,11 +1113,12 @@
     (below (flip-vert half) half)))
 
 (def ex6 (square-limit wave 2))
-(pict/paint ex6 :file "img/ex6.png")
+(comment
+  (pict/paint ex6 :file "img/ex6.png"))
 
 ;; (def ex7 rogers)
-;; (pict/paint ex7 :file "img/ex7.png")
-
+(comment
+  (pict/paint ex7 :file "img/ex7.png"))
 
 ;; ex 2.52 b
 
@@ -1130,4 +1141,172 @@
     (below (flip-vert half) half)))
 
 (def ex7 (square-limit' wave 2))
-(pict/paint ex7 :file "img/ex7.png")
+(comment
+  (pict/paint ex7 :file "img/ex7.png"))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn memq [item xs]
+  (cond (empty? xs) nil
+        (= item (first xs)) xs
+        :else (recur item (rest xs))))
+
+(comment
+  (memq 'apple '(pear banana prune))
+  ;;=> nil
+  (memq 'apple '(x (apple sauce) y apple pear)))
+;;=> (apple pear)
+
+
+(def car first)
+(def cdr next)
+(def cadr (comp first rest))
+(defn caddr [coll] (nth coll 2))
+(defn pair? [xs]
+  (and (coll? xs)
+       (<= 3 (count xs))))
+(defn =number? [exp num]
+  (and (number? exp)
+       (= exp num)))
+
+;; ex 2.53
+(list 'a 'b 'c)
+;;=> (a b c)
+(list (list 'george))
+;;=> ((george))
+(cdr '((x1 x2) (y1 y2)))
+;;=> ((y1 y2))
+(cadr '((x1 x2) (y1 y2)))
+;;=> (y1 y2)
+(pair? (car '(a short list)))
+;;=> false
+(pair? (car '((a b c) short list)))
+;;=> true
+(memq 'red '((red shoes) (blue socks)))
+;;=> nil
+(memq 'red '(red shoes blue socks))
+;;=> (red shoes blue socks)
+
+;; ex 2.54
+(= '(this is a list) '(this is a list))
+;;=> true
+(= '(this is a list) '(this (is a) list))
+;;=> false
+
+;; ex 2.55
+;; (car (quote (quate abracadbra)))
+(car ''abracadabra)
+;;=> quote
+
+(defn variable? [e] (symbol? e))
+
+(defn same-variable? [v1 v2]
+  (and
+   (variable? v1)
+   (variable? v2)
+   (= v1 v2)))
+
+(defn make-sum'
+  ([a1 a2]
+   (cond (=number? a1 0) a2
+         (=number? a2 0) a1
+         (and (number? a1)
+              (number? a2)) (+ a1 a2)
+         :else (list '+ a1 a2))))
+
+(defn make-sum
+  ([& forms]
+   (reduce make-sum' 0 forms)))
+
+(defn sum? [e]
+  (and
+   (pair? e)
+   (= (car e) '+)))
+
+(defn addend [e]
+  (cadr e))
+
+(defn augend [e]
+  (apply make-sum ((comp cdr cdr) e)))
+
+(defn make-product' [m1 m2]
+  (cond
+    (or (=number? m1 0) (=number? m2 0)) 0
+    (=number? m1 1) m2
+    (=number? m2 1) m1
+    (and (number? m1) (number? m2)) (* m1 m2)
+    :else (list '* m1 m2)))
+
+(defn make-product
+  ([& forms]
+   (reduce make-product' 1 forms)))
+
+(defn product? [e]
+  (and
+   (pair? e)
+   (= (car e) '*)))
+
+(defn multiplier [e]
+  (cadr e))
+
+(defn multiplicand [e]
+  (apply make-product ((comp cdr cdr) e)))
+
+;; ex 2.56
+(defn make-exponent [u n]
+  (cond (=number? n 1) u
+        (=number? n 0) 1
+        (and (number? u) (number? n)) (Math/pow u n)
+        :else (list '** u n)))
+
+(defn exponentiation? [e]
+  (and
+   (pair? e)
+   (= (car e) '**)))
+
+(defn base [e]
+  (cadr e))
+
+(defn exponent [e]
+  (caddr e))
+
+
+(defn deriv [exp var]
+  (cond (number? exp) 0
+        (variable? exp) (if (same-variable? exp var) 1 0)
+        (sum? exp) (make-sum (deriv (addend exp) var)
+                             (deriv (augend exp) var))
+        (exponentiation? exp) (make-product
+                               (make-product
+                                (exponent exp)
+                                (make-exponent
+                                 (base exp)
+                                 (make-sum (exponent exp) -1)))
+                               (deriv (base exp) var))
+        :else (throw (ex-info "unknown expression type: DERIV" {:expr exp}))))
+
+(deriv '(+ x 3) 'x)
+;;=> (+ 1 0)
+;;=> 1
+
+(deriv '(* x y) 'x)
+;;=> (+ (* x 0) (* 1 y))
+;;=> y
+
+(deriv '(* (* x y) (+ x 3)) 'x)
+;;=> (+ (* (* x y) (+ 1 0)) (* (+ (* x 0) (* 1 y)) (+ x 3)))
+;;=> (+ (* x y) (* y (+ x 3)))
+
+;; ex 2.56
+(deriv '(** x 3) 'x)
+;;=> (* 3 (** x 2))
+
+;; ex 2.57
+(deriv '(* x y (+ x 3)) 'x)
+;;=> (+ (* x y) (* y (+ x 3)))
+
+;; ex 2.58
+(deriv '(x + (3 * (x + (y + 2)))) 'x)
+
+(deriv '(x + 3 * (x + (y + 2))) 'x)
