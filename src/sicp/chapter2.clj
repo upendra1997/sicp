@@ -1337,3 +1337,87 @@
 
 (deriv '(x + 3 * (x + (y + 2))) 'x)
 ;;=> 4
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn element-of-set? [x set]
+  (cond (nil? set) false
+        (= (car set) x) true
+        :else (element-of-set? x (cdr set))))
+
+(defn adjoin-set [x set]
+  (if (element-of-set? x set)
+    set
+    (cons x set)))
+
+(defn intersection-set [set1 set2]
+  (cond
+    (or (nil? set1) (nil? set2)) (list)
+    (element-of-set? (car set1) set2) (cons
+                                       (car set1)
+                                       (intersection-set
+                                        (cdr set1)
+                                        set2))
+    :else (intersection-set (cdr set1) set2)))
+
+;; Ex 2.59
+(defn union-set [set1 set2]
+  (reduce #(adjoin-set %2 %1) set1 set2))
+
+;; ex 2.60
+(comment
+  (defn element-of-set? [x set]
+    (cond (nil? set) false
+          (= (car set) x) true
+          :else (element-of-set? x (cdr set))))
+
+  (defn adjoin-set [x set] ;; faster O(1)
+    (cons x set))
+
+  (defn intersection-set [set1 set2]
+    (filter #(element-of-set? %1 set2) set1))
+
+  (defn union-set [set1 set2] ;; faster O(n)
+    (reduce #(adjoin-set %2 %1) set1 set2)))
+
+(defn element-of-set? [x set]
+  (cond (nil? set) false
+        (= x (car set)) true
+        (< x (car set)) false
+        :else (element-of-set? x (cdr set))))
+
+(defn intersection-set [set1 set2]
+  (if (or (nil? set1) (nil? set2))
+    (list)
+    (let [x1 (car set1)
+          x2 (car set2)]
+      (cond (= x1 x2) (cons x1 (intersection-set (cdr set1)
+                                                 (cdr set2)))
+            (< x1 x2) (intersection-set (cdr set1) set2)
+            (< x2 x1) (intersection-set set1 (cdr set2))))))
+
+;; ex 2.61
+(defn adjoin-set [x set]
+  (if (empty? set)
+    (list)
+    (let [elem (car set)]
+      (cond (= elem x) set
+            (< elem x) (cons x set)
+            :else (cons elem (adjoin-set x (cdr set)))))))
+;; by the same reasoing that element-of-set? requires n/2 on
+;; average as the element I am searching might be in the middle of
+;; of the list, the place where I need to merge the x might be
+;; in middle
+
+;; ex 2.62
+(defn union-set [set1 set2]
+  (cond
+    (empty? set1) set2
+    (empty? set2) set1
+    :else (let [x1 (car set1)
+                x2 (car set2)]
+            (cond (= x1 x2) (cons x1 (union-set (cdr set1) (cdr set2)))
+                  (< x1 x2) (cons x1 (union-set (cdr set1) set2))
+                  (> x1 x2) (cons x2 (union-set set1 (cdr set2)))))))
+
+;;;;;;;;
