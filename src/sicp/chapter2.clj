@@ -1,5 +1,6 @@
 (ns sicp.chapter2
-  (:require [sicp.chapter1 :as chap1]
+  (:require [clojure.set :refer [union]]
+            [sicp.chapter1 :as chap1]
             [sicp.pictureLang :as pict]))
 
 (defn linear-combination [a b x y]
@@ -1578,3 +1579,173 @@
   (lookup 6 items)
   ;;=> false
   )
+
+(def simbol? (comp second first entry))
+(def frequency? (comp first first entry))
+
+(defn leaf-comparison [leaf1 leaf2]
+  (let [f1 (frequency? leaf1)
+        f2 (frequency? leaf2)
+        s1 (vec (simbol? leaf1))
+        s2 (vec (simbol? leaf2))
+        c (compare [f1 s1] [f2 s2])]
+    c))
+
+(defn make-leaf [symbol frequency]
+  (make-tree (sorted-set-by leaf-comparison [frequency #{symbol}]) (list) (list)))
+
+(defn leaf? [tree] (= 1 (count (simbol? tree))))
+
+(defn merge-tree [tree1 tree2]
+  (let [freq1 (frequency? tree1)
+        freq2 (frequency? tree2)
+        simbol1 (simbol? tree1)
+        simbol2 (simbol? tree2)
+        res (sorted-set-by leaf-comparison [(+ freq1 freq2) (union simbol1 simbol2)])]
+    (make-tree res tree1 tree2)
+    #_(if (< freq1 freq2)
+        (make-tree res tree1 tree2)
+        (make-tree res tree2 tree1))))
+
+(defn decode [orig-tree encoding]
+  (defn decode' [tree enc]
+    (cond
+      (leaf? tree) (if enc
+                     (cons (first (simbol? tree)) (decode orig-tree enc))
+                     (list (first (simbol? tree))))
+      (empty? enc) (throw (ex-info "incomplete encoding"
+                                   {:tree tree
+                                    :encoding enc}))
+      :else (case (first enc)
+              0 (decode' (left-branch tree) (cdr enc))
+              1 (decode' (right-branch tree) (cdr enc))
+              (throw (ex-info "incorrect bit present"
+                              {:encoding enc})))))
+  (decode' orig-tree encoding))
+
+(defn encode' [tree message]
+  (cond (not ((simbol? tree) message)) (throw (ex-info "message not available in set"
+                                                       {:tree tree
+                                                        :message message
+                                                        :symbol (simbol? tree)}))
+        (not (leaf? tree)) (try
+                             (cons 0 (encode' (left-branch tree) message))
+                             (catch Exception ex
+                               (cons 1 (encode' (right-branch tree) message))))))
+
+(defn encode [tree message]
+  (if (empty? message)
+    (list)
+    (concat (encode' tree (car message)) (encode tree (cdr message)))))
+
+(def sample-tree
+  (merge-tree (make-leaf 'a 4)
+              (merge-tree (make-leaf 'b 2)
+                          (merge-tree (make-leaf 'd 1)
+                                      (make-leaf 'c 1)))))
+
+(def encoding [0 1 1 0 0 1 0 1 0 1 1 1 0])
+
+;; ex 2.67
+;; ex 2.68
+(comment
+  sample-tree
+  ;;=> (#{[8 #{a c b d}]} (#{[4 #{a}]} () ()) (#{[4 #{c b d}]} (#{[2 #{b}]} () ()) (#{[2 #{c d}]} (#{[1 #{d}]} () ()) (#{[1 #{c}]} () ()))))
+
+  (decode sample-tree encoding)
+  ;;=> (a d a b b c a)
+
+  (encode sample-tree (decode sample-tree encoding))
+  ;;=> (0 1 1 0 0 1 0 1 0 1 1 1 0)
+  )
+
+;; ex 2.69
+(def freq {"A" 2
+           "GET" 2
+           "SHA" 3
+           "WAH" 1
+           "BOOM" 1
+           "JOB" 2
+           "NA" 16
+           "YIP" 9})
+
+(defn make-leaf-set [pairs]
+  (->> pairs
+       (map (fn [[k v]] (make-leaf k v)))
+       (apply (partial sorted-set-by leaf-comparison))))
+
+(comment
+  (make-leaf-set freq)
+  ;;=> #{(#{[1 #{"BOOM"}]} () ())
+  ;;     (#{[1 #{"WAH"}]} () ())
+  ;;     (#{[2 #{"A"}]} () ())
+  ;;     (#{[2 #{"GET"}]} () ())
+  ;;     (#{[2 #{"JOB"}]} () ())
+  ;;     (#{[3 #{"SHA"}]} () ())
+  ;;     (#{[9 #{"YIP"}]} () ())
+  ;;     (#{[16 #{"NA"}]} () ())}
+  )
+
+(defn generate-huffman-tree [pairs]
+  (defn generate [l]
+    (if (= 1 (count l))
+      l
+      (let [x (first l)
+            y (second l)
+            z (clojure.set/difference l (sorted-set-by leaf-comparison x y))
+            res (sorted-set-by leaf-comparison (merge-tree x y))]
+        (recur (clojure.set/union z res)))))
+  (->> pairs
+       (make-leaf-set)
+       (generate)
+       (first)))
+
+(def huffman-tree (generate-huffman-tree freq))
+(def message ["GET" "A" "JOB"
+              "SHA" "NA" "NA" "NA" "NA" "NA" "NA" "NA" "NA"
+              "GET" "A" "JOB"
+              "SHA" "NA" "NA" "NA" "NA" "NA" "NA" "NA" "NA"
+              "WAH" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP"
+              "SHA" "BOOM"])
+
+;; ex 2.70
+(comment
+  (->> message
+       (encode huffman-tree)
+       (count))
+  ;;=> (1 1 1 1 1 1 1 1 1 0 1 1 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 0 1 1 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1 1 0 1 1 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 1 1 0 1 1 0 1 0)
+  ;; 84 is the length
+  (->> message
+       (encode huffman-tree)
+       (decode huffman-tree)
+       (count))
+  ;;=> ("GET" "A" "JOB" "SHA" "NA" "NA" "NA" "NA" "NA" "NA" "NA" "NA" "GET" "A" "JOB" "SHA" "NA" "NA" "NA" "NA" "NA" "NA" "NA" "NA" "WAH" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "YIP" "SHA" "BOOM")
+  ;;=> 36 is the length of the message and it would have required 3 bit per message.. i.e. (= (* 3 36) 108)
+  )
+
+
+;; ex 2.71
+(comment
+  (require '[clojure.math :as math])
+  (def n 8)
+  (def chars (map char (range 97 123)))
+  (def f (into {} (map #(identity [(nth chars %1) (math/pow 2 %1)]) (range n))))
+  (def t (generate-huffman-tree f))
+  t
+  ;;=> (#{[255.0 #{\a \b \c \d \e \f \g \h}]} (#{[127.0 #{\a \b \c \d \e \f \g}]} (#{[63.0 #{\a \b \c \d \e \f}]} (#{[31.0 #{\a \b \c \d \e}]} (#{[15.0 #{\a \b \c \d}]} (#{[7.0 #{\a \b \c}]} (#{[3.0 #{\a \b}]} (#{[1.0 #{\a}]} () ()) (#{[2.0 #{\b}]} () ())) (#{[4.0 #{\c}]} () ())) (#{[8.0 #{\d}]} () ())) (#{[16.0 #{\e}]} () ())) (#{[32.0 #{\f}]} () ())) (#{[64.0 #{\g}]} () ())) (#{[128.0 #{\h}]} () ()))
+  (->> (nth chars 0)
+       (list)
+       (encode t)
+       (count))
+  ;;=> 7
+  (->> (nth chars (dec n))
+       (list)
+       (encode t)
+       (count))
+  ;;=> 1
+  )
+;; the most frequent bit require 1 bit and the least frequent bit requires n-1 bits
+
+;; ex 2.72
+;; the order of growth for the search is O(n) for the worst case, because at each step I need to check the left branch to find whether the element is in the set or not.
+;; it's different from the book because I am using a set, which gives O(1) performance for checking if the element is there in the set or not.
