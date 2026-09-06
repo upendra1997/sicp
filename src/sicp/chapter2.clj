@@ -1421,3 +1421,160 @@
                   (> x1 x2) (cons x2 (union-set set1 (cdr set2)))))))
 
 ;;;;;;;;
+
+(def entry car)
+(def left-branch cadr)
+(def right-branch caddr)
+(defn make-tree [entry left right]
+  (list entry left right))
+
+(defn element-of-set? [x set]
+  (cond (empty? set) false
+        (= x (entry set)) true
+        (< x (entry set)) (element-of-set? x (left-branch set))
+        (> x (entry set)) (element-of-set? x (right-branch set))))
+
+(defn adjoin-set [x set]
+  (cond (empty? set) (make-tree x (list) (list))
+        (= x (entry set)) set
+        (< x (entry set)) (make-tree (entry set)
+                                     (adjoin-set x (left-branch set))
+                                     (right-branch set))
+        (> x (entry set)) (make-tree (entry set)
+                                     (left-branch set)
+                                     (adjoin-set x (right-branch set)))))
+
+;; ex 2.63
+;; in-order tree traversal
+(defn tree->list-1 [tree]
+  (if (empty? tree)
+    (list)
+    (concat (tree->list-1 (left-branch tree))
+            (cons (entry tree)
+                  (tree->list-1 (right-branch tree))))))
+
+(defn tree->list-2 [tree]
+  (defn copy-to-list [tree result-list]
+    (if (empty? tree)
+      result-list
+      (copy-to-list (left-branch tree) ;; tail call optimization
+                    (cons (entry tree)
+                          (copy-to-list
+                           (right-branch tree)
+                           result-list)))))
+  (copy-to-list tree (list)))
+
+(def tree1
+  (make-tree 7
+             (make-tree 3
+                        (make-tree 1 (list) (list))
+                        (make-tree 5 (list) (list)))
+             (make-tree 9
+                        (list)
+                        (make-tree 11 (list) (list)))))
+(def tree2
+  (make-tree 3
+             (make-tree 1 (list) (list))
+             (make-tree 7
+                        (make-tree 5 (list) (list))
+                        (make-tree 9
+                                   (list)
+                                   (make-tree 11 (list) (list))))))
+
+(def tree3
+  (make-tree 5
+             (make-tree 3
+                        (make-tree 1 (list) (list))
+                        (list))
+             (make-tree 9
+                        (make-tree 7 (list) (list))
+                        (make-tree 11 (list) (list)))))
+
+;; ex 2.63
+;; same result, but tree-list-2 uses tail call optimization
+;; so less number of steps for tree-list-2
+(comment
+  (tree->list-1 tree1)
+  ;;=> (1 3 5 7 9 11)
+
+  (tree->list-1 tree2)
+  ;;=> (1 3 5 7 9 11)
+
+  (tree->list-1 tree3)
+  ;;=> (1 3 5 7 9 11)
+
+  (tree->list-2 tree1)
+  ;;=> (1 3 5 7 9 11)
+
+  (tree->list-2 tree2)
+  ;;=> (1 3 5 7 9 11)
+
+  (tree->list-2 tree3)
+  ;;=> (1 3 5 7 9 11)
+  )
+
+;; ex 2.64
+(defn partial-tree [elements n]
+  (if (= n 0)
+    (cons (list) elements)
+    (let [left-size (quot (dec n) 2)
+          left-result (partial-tree elements left-size)
+          left-tree (car left-result)
+          not-left-elements (cdr left-result)
+          right-size       (- n (+ left-size 1))
+          this-entry (car not-left-elements)
+          right-result (partial-tree (cdr not-left-elements) right-size)
+          right-tree (car right-result)
+          remaining-elements (cdr right-result)]
+      (cons (make-tree this-entry left-tree right-tree)
+            remaining-elements))))
+
+(defn list->tree [elements]
+  (car (partial-tree elements (count elements))))
+;; ex 2.64 ;; it seems to be O(n),
+;; because each time it dividies the result in half,
+;; and call the same algorithm on the half two times.
+(comment
+  (list->tree (list 1 3 5 7 9 11))
+  ;;=> (5 (1 () (3 () ())) (9 (7 () ()) (11 () ())))
+  )
+
+(defn union-set [set1 set2]
+  (reduce #(adjoin-set %2 %1) set1 (tree->list-1 set2)))
+
+(defn intersection-set [set1 set2]
+  (let [s1 (tree->list-1 set1)
+        s2 (tree->list-1 set2)]
+    (list->tree (map first (take-while (fn [[a b]] (= a b)) (map vector s1 s2))))))
+
+(comment
+  (union-set tree1 tree2)
+  ;;=> (7 (3 (1 () ()) (5 () ())) (9 () (11 () ())))
+  (intersection-set tree1 tree2)
+  ;;=> (5 (1 () (3 () ())) (9 (7 () ()) (11 () ())))
+  )
+
+(def key car)
+(def value second)
+(defn item [k v] (list k v))
+
+;; ex 2.66
+(defn lookup [given-key set-of-records]
+  (cond (empty? set-of-records) false
+        (= given-key (key (entry set-of-records))) (value (entry set-of-records))
+        (< given-key (key (entry set-of-records))) (lookup given-key (left-branch set-of-records))
+        :else (lookup given-key (right-branch set-of-records))))
+
+(comment
+  (def items (list->tree (list
+                          (item 1 "one")
+                          (item 3 "three")
+                          (item 5 "five")
+                          (item 7 "seven")
+                          (item 9 "nine")
+                          (item 11 "eleven"))))
+  (lookup 3 items)
+  ;;=> "three"
+  (lookup 6 items)
+  ;;=> false
+  )
