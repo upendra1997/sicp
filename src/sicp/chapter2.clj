@@ -1869,3 +1869,49 @@
   [x y]
   (->PolarComplex (/ (:mag x) (:mag y))
                   (- (:angle x) (:angle y))))
+
+;; ex 2.74
+;; a
+(defprotocol Record
+  (get-salary [this])
+  (get-address [this]))
+;; b
+(defprotocol Division
+  (get-record [this employee-name]))
+;; c
+(defn find-employee-record [division-files employee-name]
+  (first (for [record division-files]
+           (get-record record employee-name))))
+;; d
+;; for any new company, the should implement division protocol for their file
+;; and also imlement Record functionality
+
+
+;; ex 2.75
+;; already done in clojure
+;; message passing style is the one where we have defprotocal
+;; that is each record have set of functionality and it will be dispacted
+;; only on that type
+;; but the other generic style, i.e. defmethod and defmulti is the clojure equivalent
+; which will ensure that we can dispact on type and operation both
+
+;; ex 2.76
+;; message passing:
+;; if we are adding mulitple types, we should use defprotocol which will allow us
+;; to add the functionality for a new type easily and only those types will be impacted.
+;; but for adding a new functionality we either need to change all existing types implementation
+;; or do lot's of extend-protocl for all the defined types(may miss it)
+
+;; data directed approach:
+;; if we are adding multiple functions/operation we should use multimethods, as adding new operation
+;; is easy we just need to define that operation for all the limited types using multimethods
+;; limited to just that file
+;; adding a type is adding multimethod for that type either in those modules(coupling)
+;; or adding in a single place
+
+;; explicit dispatch:
+;; hard :(
+;; for every function already implemented if adding a new type, have to add a cond
+;; for new function, add cond for all the existing types - but just limited to that file and function
+
+;; in clojure I am using defmulti and defmethod for both data directed approach and explicit dispatch.
