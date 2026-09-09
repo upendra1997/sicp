@@ -1,7 +1,8 @@
 (ns sicp.chapter2
   (:require [clojure.set :refer [union]]
             [sicp.chapter1 :as chap1]
-            [sicp.pictureLang :as pict]))
+            [sicp.pictureLang :as pict]
+            [clojure.math]))
 
 (defn linear-combination [a b x y]
   (+ (* a x) (* b y)))
@@ -1200,6 +1201,14 @@
 (car ''abracadabra)
 ;;=> quote
 
+(defprotocol Derive
+  (derivation [this v])
+  (to-list [this]))
+
+(defrecord Add [a b])
+(defrecord Mul [a b])
+(defrecord Exp [a b])
+
 (defn variable? [e] (symbol? e))
 
 (defn same-variable? [v1 v2]
@@ -1214,7 +1223,7 @@
          (=number? a2 0) a1
          (and (number? a1)
               (number? a2)) (+ a1 a2)
-         :else (list '+ a1 a2))))
+         :else (->Add a1 a2))))
 
 (defn make-sum
   ([& forms]
@@ -1237,7 +1246,7 @@
     (=number? m1 1) m2
     (=number? m2 1) m1
     (and (number? m1) (number? m2)) (* m1 m2)
-    :else (list '* m1 m2)))
+    :else (->Mul m1 m2)))
 
 (defn make-product
   ([& forms]
@@ -1259,7 +1268,7 @@
   (cond (=number? n 1) u
         (=number? n 0) 1
         (and (number? u) (number? n)) (Math/pow u n)
-        :else (list '** u n)))
+        :else (->Exp u n)))
 
 (defn exponentiation? [e]
   (and
@@ -1272,10 +1281,65 @@
 (defn exponent [e]
   (caddr e))
 
+;; ex 2.73
+;; a
+;; no issue, because everything is object in clojure, so there is a symbol or tag(sicp)
+;; already attached
+;; d
+;; I am using clojure machinery and single method dispatch using protocal and defrecord
+;; but if I was using multimethods for the same and I changed the order in the defmulti
+;; I would have to change every defmethod
+;; b,c
+
+(extend-protocol
+ Derive
+  java.lang.Number
+  (derivation [this v] 0)
+  (to-list [this] this))
+
+(extend-protocol
+ Derive
+  clojure.lang.Symbol
+  (derivation [this v] (if (same-variable? this v) 1 0))
+  (to-list [this] this))
+
+(extend-protocol
+ Derive
+  Add
+  (derivation [this v] (make-sum (derivation (:a this)  v)
+                                 (derivation (:b this) v)))
+  (to-list [this] (list '+ (to-list (:a this)) (to-list (:b this)))))
+
+(extend-protocol
+ Derive
+  Mul
+  (derivation [this v] (make-sum
+                        (make-product (:a this)
+                                      (derivation (:b this)   v))
+                        (make-product (derivation (:a this)   v)
+                                      (:b this))))
+  (to-list [this] (list '* (to-list (:a this)) (to-list (:b this)))))
+
+(extend-protocol
+ Derive
+  Exp
+  (derivation [this v]
+    (make-product
+     (make-product
+      (:b this)
+      (make-exponent
+       (:a this)
+       (make-sum (:b this) -1)))
+     (derivation (:a this)  v)))
+  (to-list [this] (list '** (to-list (:a this)) (to-list (:b this)))))
+
 (defn simplify [expr]
   (if (and (seq? expr)
            (some (partial = (car expr)) ['* '+ '**]))
-    expr
+    (condp = (car expr)
+      '+  (apply make-sum (map simplify (cdr expr)))
+      '*  (apply make-product (map simplify (cdr expr)))
+      '** (apply make-exponent (map simplify (cdr expr))))
     (cond (not (seq? expr)) expr
           (memq '+ expr) (let [[a1 a2] (split-with (partial not= '+) expr)]
                            (make-sum (simplify a1)
@@ -1294,23 +1358,7 @@
 
 (defn deriv [exp var]
   (let [exp (simplify exp)]
-    (cond (number? exp) 0
-          (variable? exp) (if (same-variable? exp var) 1 0)
-          (sum? exp) (make-sum (deriv (addend exp) var)
-                               (deriv (augend exp) var))
-          (product? exp) (make-sum
-                          (make-product (multiplier exp)
-                                        (deriv (multiplicand exp) var))
-                          (make-product (deriv (multiplier exp) var)
-                                        (multiplicand exp)))
-          (exponentiation? exp) (make-product
-                                 (make-product
-                                  (exponent exp)
-                                  (make-exponent
-                                   (base exp)
-                                   (make-sum (exponent exp) -1)))
-                                 (deriv (base exp) var))
-          :else (throw (ex-info "unknown expression type: DERIV" {:expr exp})))))
+    (to-list (derivation exp var))))
 
 (deriv '(+ x 3) 'x)
 ;;=> (+ 1 0)
@@ -1749,3 +1797,75 @@
 ;; ex 2.72
 ;; the order of growth for the search is O(n) for the worst case, because at each step I need to check the left branch to find whether the element is in the set or not.
 ;; it's different from the book because I am using a set, which gives O(1) performance for checking if the element is there in the set or not.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defprotocol Complex
+  (real [this])
+  (imag [this])
+  (mag [this])
+  (angle [this]))
+
+(defrecord RectangularComplex [real imag])
+
+(defrecord PolarComplex [mag angle])
+
+(defn RectangularComplex->PolarComplex [^RectangularComplex z]
+  (let [x (:real z)
+        y (:imag z)
+        r (clojure.math/sqrt (+ (* x x) (* y y)))
+        a (clojure.math/atan2 y x)]
+    (->PolarComplex r a)))
+
+(defn PolarComplex->RectangularComplex [^PolarComplex z]
+  (let [a (:angle z)
+        r (:mag z)
+        x (* r (clojure.math/cos a))
+        y (* r (clojure.math/sin a))]
+    (->RectangularComplex x y)))
+
+(extend-type RectangularComplex
+  Complex
+  (real [x] (:real x))
+  (imag [x] (:imag x))
+  (mag [x] (-> x
+               RectangularComplex->PolarComplex
+               :mag))
+  (angle [x] (-> x
+                 RectangularComplex->PolarComplex
+                 :angle)))
+
+(extend-type PolarComplex
+  Complex
+  (mag [x] (:mag x))
+  (angle [x] (:angle x))
+  (real [x] (-> x
+                PolarComplex->RectangularComplex
+                :real))
+  (imag [x] (-> x
+                PolarComplex->RectangularComplex
+                :imag)))
+
+(defmulti add-complex (fn [x y] [(type x) (type y)]))
+(defmethod add-complex [RectangularComplex RectangularComplex]
+  [x y]
+  (->RectangularComplex (+ (:real x) (:real y))
+                        (+ (:imag x) (:imag y))))
+
+(defmulti sub-complex (fn [x y] [(type x) (type y)]))
+(defmethod sub-complex [RectangularComplex RectangularComplex]
+  [x y]
+  (->RectangularComplex (- (:real x) (:real y))
+                        (- (:imag x) (:imag y))))
+
+(defmulti mul-complex (fn [x y] [(type x) (type y)]))
+(defmethod mul-complex [PolarComplex PolarComplex]
+  [x y]
+  (->PolarComplex (* (:mag x) (:mag y))
+                  (- (:angle x) (:angle y))))
+
+(defmulti div-complex (fn [x y] [(type x) (type y)]))
+(defmethod div-complex [PolarComplex PolarComplex]
+  [x y]
+  (->PolarComplex (/ (:mag x) (:mag y))
+                  (- (:angle x) (:angle y))))
