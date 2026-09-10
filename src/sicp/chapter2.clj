@@ -11,6 +11,19 @@
     (add (mul a x) (mul b y)))
 
 ;; Exercise 2.1
+
+(defrecord Rat [num den])
+
+(defprotocol Arithmetic
+  (add [x y])
+  (subtract [x y])
+  (multiply [x y])
+  (divide [x y])
+  ;; ex 2.79
+  (equal [x y])
+  ;; ex 2.80
+  (=zero? [x]))
+
 (defn make-rat [num den]
   (let [sign (cond
                (and (< num 0) (< den 0)) :positive
@@ -20,12 +33,12 @@
         d (Math/abs den)
         c (int (.gcd (BigInteger. (str n)) (BigInteger. (str d))))]
     (if (= sign :negative)
-      (cons (- (/ n c)) (cons (/ d c) nil)))
-    (cons (/ n c) (cons (/ d c) nil))))
+      (->Rat (- (/ n c)) (/ d c)))
+    (->Rat (/ n c) (/ d c))))
 
-(def numer first)
+(def numer :num)
 
-(def denom second)
+(def denom :den)
 
 (defn add-rat [x y]
   (make-rat
@@ -51,6 +64,14 @@
   (=
    (* (numer x) (denom y))
    (* (denom x) (numer y))))
+
+(extend-protocol Arithmetic
+  (add [x y] (add-rat x y))
+  (subtract [x y] (sub-rat x y))
+  (multiply [x y] (mul-rat x y))
+  (divide [x y] (div-rat x y))
+  (equal [x y] (equal-rat? x y))
+  (=zero? [x] (= 0 (numer x))))
 
 (defn rat->string [rat]
   (str (numer rat) "/" (denom rat)))
@@ -1870,6 +1891,16 @@
   (->PolarComplex (/ (:mag x) (:mag y))
                   (- (:angle x) (:angle y))))
 
+;; ex 2.79 and 2.80
+(extend-protocol Arithmetic
+  Complex
+  (add [x y] (add-complex x y))
+  (subtract [x y] (sub-complex x y))
+  (multiply [x y] (mul-complex x y))
+  (divide [x y] (div-complex x y))
+  (equal [x y] (and (= (real x) (real y)) (= (imag x) (imag y))))
+  (=zero? [x] (= 0 (real x) (imag x))))
+
 ;; ex 2.74
 ;; a
 (defprotocol Record
@@ -1915,3 +1946,36 @@
 ;; for new function, add cond for all the existing types - but just limited to that file and function
 
 ;; in clojure I am using defmulti and defmethod for both data directed approach and explicit dispatch.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ex 2.77
+;; it works because I don't have to explicitely handle the dispatch table
+;; but I think it just invoked the Complex protocol's mag function
+;; found out that rectangular complex implements that which in turn convert the type to polar
+(mag (->RectangularComplex 3 4))
+;;=> 5.0
+
+;; ex 2.78
+;; not required because we don't have explicit dispatch table
+;; I would use the internal number? instead of type tag for invoking the scheme-number related tag functions
+
+;; ex 2.79 & 2.80
+(extend-protocol Arithmetic
+  java.lang.Number
+  (add [x y] (+ x y))
+  (subtract [x y] (- x y))
+  (multiply [x y] (* x y))
+  (divide [x y] (/ x y))
+  (equal [x y] (= x y))
+  (=zero? [x] (zero? x)))
+
+;; ex 2.81
+;; I think it goes in infinite loop.. as complex of type complex
+;; and we will keep doing it once we have resolved the values
+;; we can prevent this in clojure by adding a default multimethod which check for type before coercing.
+
+;; ex 2.82
+;; I would choose the type that is highest in the ladder and convert each one into that.
+;; so int -> float -> rat -> complex
