@@ -2,7 +2,7 @@
   (:require [clojure.set :refer [union]]
             [sicp.chapter1 :as chap1]
             [sicp.pictureLang :as pict]
-            [clojure.math]))
+            [clojure.math :as math]))
 
 (defn linear-combination [a b x y]
   (+ (* a x) (* b y)))
@@ -66,6 +66,7 @@
    (* (denom x) (numer y))))
 
 (extend-protocol Arithmetic
+  Rat
   (add [x y] (add-rat x y))
   (subtract [x y] (sub-rat x y))
   (multiply [x y] (mul-rat x y))
@@ -1891,16 +1892,6 @@
   (->PolarComplex (/ (:mag x) (:mag y))
                   (- (:angle x) (:angle y))))
 
-;; ex 2.79 and 2.80
-(extend-protocol Arithmetic
-  Complex
-  (add [x y] (add-complex x y))
-  (subtract [x y] (sub-complex x y))
-  (multiply [x y] (mul-complex x y))
-  (divide [x y] (div-complex x y))
-  (equal [x y] (and (= (real x) (real y)) (= (imag x) (imag y))))
-  (=zero? [x] (= 0 (real x) (imag x))))
-
 ;; ex 2.74
 ;; a
 (defprotocol Record
@@ -1963,12 +1954,19 @@
 
 ;; ex 2.79 & 2.80
 (extend-protocol Arithmetic
+  java.lang.Integer
+  (add [x y] (+ x y))
+  (subtract [x y] (- x y))
+  (multiply [x y] (* x y))
+  (divide [x y] (/ x y))
+  (equal [x y] (= x (math/round y)))
+  (=zero? [x] (zero? x))
   java.lang.Number
   (add [x y] (+ x y))
   (subtract [x y] (- x y))
   (multiply [x y] (* x y))
   (divide [x y] (/ x y))
-  (equal [x y] (= x y))
+  (equal [x y] (= (* 1.0 x) (* 1.0 y)))
   (=zero? [x] (zero? x)))
 
 ;; ex 2.81
@@ -1979,3 +1977,90 @@
 ;; ex 2.82
 ;; I would choose the type that is highest in the ladder and convert each one into that.
 ;; so int -> float -> rat -> complex
+;; and for the case when the function require different kind of argument
+;; maybe I will keep trying to run those functions while going up the ladder)
+
+;; ex 2.83
+(defprotocol Tower
+  (raise [x])
+  (lower [x]))
+
+(extend-protocol Tower
+  java.lang.Integer
+  (raise [x]
+    (make-rat x 1))
+  (lower [x] (throw (ex-info "cannot lower it further" {:value x}))))
+
+(extend-protocol Tower
+  Rat
+  (raise [x] (/ (* 1.0 (numer x)) (* 1.0 (denom x))))
+  (lower [x] (int (numer x))))
+
+(extend-protocol Tower
+  java.lang.Number
+  (raise [x] (->RectangularComplex x 0))
+  (lower [x] (make-rat (math/round x) 1)))
+
+(extend-protocol Tower
+  RectangularComplex
+  (raise [x] (throw (ex-info "cannot raise it further" {:value x})))
+  (lower [x] (* 1.0 (real x))))
+
+;; ex 2.79 and 2.80
+(extend-protocol Arithmetic
+  RectangularComplex
+  (add [x ^java.lang.Integer y] (add-complex x (raise (raise (raise y)))))
+  (add [x ^RectangularComplex y] (add-complex x y))
+  (subtract [x y] (sub-complex x y))
+  (multiply [x y] (mul-complex x y))
+  (divide [x y] (div-complex x y))
+  (equal [x y] (and (equal (real x) (real y)) (equal (imag x) (imag y))))
+  (=zero? [x] (= 0 (real x) (imag x))))
+
+;; ex 2.84
+;; since I have chosen single dispatch and using defprotocl
+;; one way would be to overloading functions for the arithmetic package for each exisitng types in the tower for all the methods where it exists.
+;; But I could not make it work, because I need to use deftype for this defining all the methods at the same place...
+;; If I was doing the arithemetic package using defrecords... I will add the raise function in the :default function
+
+(defmethod add-complex [RectangularComplex java.lang.Integer]
+  [x y]
+  (let [y (raise (raise (raise y)))]
+    (->RectangularComplex (+ (:real x) (:real y))
+                          (+ (:imag x) (:imag y)))))
+
+(comment
+  (add (->RectangularComplex 1.0 3) (int 3))
+  ;;=> #sicp.chapter2.RectangularComplex{:real 4.0, :imag 3}
+  )
+
+;; ex 2.85
+(defn drop [x]
+  (try
+    (let [l (lower x)
+             h (raise l)]
+         (if (equal h x)
+           (drop l)
+           x))
+    (catch Exception e
+      x)))
+;;=> #'sicp.chapter2/drop
+
+(comment
+  (drop (->RectangularComplex 1.5 0))
+  ;;=> 1.5
+  (drop (->RectangularComplex 1.0 0))
+  ;;=> 1
+  (drop (->RectangularComplex 2 3))
+  ;;=> #sicp.chapter2.RectangularComplex{:real 2, :imag 3}
+  )
+
+;; ex 2.86
+;; it's doable, but it's lot of code :scary:
+;; but the functions needed for each type(for us it's only Rat) are:
+;; square-root
+;; sine
+;; cosine
+;; atan2
+;; and then we need to update existing functions to use the generic method or the wrapper
+;; which have function added for rat and our other defined types
