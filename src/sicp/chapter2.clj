@@ -2038,10 +2038,10 @@
 (defn drop [x]
   (try
     (let [l (lower x)
-             h (raise l)]
-         (if (equal h x)
-           (drop l)
-           x))
+          h (raise l)]
+      (if (equal h x)
+        (drop l)
+        x))
     (catch Exception e
       x)))
 ;;=> #'sicp.chapter2/drop
@@ -2064,3 +2064,175 @@
 ;; atan2
 ;; and then we need to update existing functions to use the generic method or the wrapper
 ;; which have function added for rat and our other defined types
+
+;;; Section 2.5.3
+
+(defrecord Term [coeff power])
+
+(defrecord Poly [var list])
+
+(defn term-list-sorted [& args]
+  (apply sorted-set-by
+         (fn [a b]
+           (compare
+            [(:power b) (:coeff b)]
+            [(:power a) (:coeff a)]))
+         (filter (comp not =zero? :coeff) args)))
+
+(defn make-poly [v l]
+  (->Poly v l))
+
+(defn make-terms [terms]
+  (apply term-list-sorted
+         (map
+          (fn [[coeff pow]] (->Term coeff pow))
+          terms)))
+
+(defn adjoin-term [ts & args]
+  (apply conj ts (filter (comp not =zero? :coeff) args)))
+
+(defn add-terms [l1 l2]
+  (cond (empty? l1) l2
+        (empty? l2) l1
+        :else (let [t1 (first l1)
+                    t2 (first l2)
+                    rest (add-terms (disj l1 t1) (disj l2 t2))]
+                (cond
+                  (= (:power t1) (:power t2))
+                  (adjoin-term rest
+                               (->Term (+
+                                        (:coeff t1)
+                                        (:coeff t2))
+                                       (:power t1)))
+                  :else
+                  (adjoin-term rest t1 t2)))))
+
+(defn mul-term-by-all-terms [t1 ts]
+  (if-not (empty? ts)
+    (let [t2 (first ts)]
+      (adjoin-term
+       (mul-term-by-all-terms t1 (disj ts t2))
+       (->Term
+        (* (:coeff t1) (:coeff t2))
+        (+ (:power t1) (:power t2)))))
+    (term-list-sorted)))
+
+(defn mul-terms [l1 l2]
+  (if (or (empty? l1) (empty? l2))
+    (term-list-sorted)
+    (let [t1 (first l1)]
+      (add-terms
+       (mul-term-by-all-terms t1 l2)
+       (mul-terms (disj l1 t1) l2)))))
+
+(defn add-poly [p1 p2]
+  (if (same-variable? (:var p1) (:var p2))
+    (make-poly (:var p1)
+               (add-terms
+                (:list p1)
+                (:list p2)))))
+
+(defn mul-poly [p1 p2]
+  (if (same-variable? (:var p1) (:var p2))
+    (make-poly (:var p1)
+               (mul-terms
+                (:list p1)
+                (:list p2)))))
+
+(defn sub-terms [l1 l2]
+  (add-terms l1 (mul-terms (make-terms [[-1 0]]) l2)))
+
+(defn div-terms [l1 l2]
+  (if (empty? l1)
+    [(make-terms []) (make-terms [])]
+    (let [t1 (first l1)
+          t2 (first l2)]
+      (if (> (:power t2) (:power t1))
+        [(term-list-sorted) l1]
+        (let [new-c (/ (:coeff t1) (:coeff t2))
+              new-p (- (:power t1) (:power t2))
+              new-term (term-list-sorted (->Term new-c new-p))]
+          (let [temp (sub-terms l1 (mul-terms new-term l2))
+                [q r] (div-terms temp l2)]
+            [(clojure.set/union q new-term) r]))))))
+
+(defn div-poly [p1 p2]
+  (if (same-variable? (:var p1) (:var p2))
+    (let [[q r] (div-terms
+                 (:list p1)
+                 (:list p2))]
+      [(make-poly (:var p1) q) (make-poly (:var p1) r)])))
+
+
+;; ex 2.87
+;; ex 2.88
+(extend-protocol Arithmetic
+  Poly
+  (add [x y]
+    (add-poly x y))
+  (subtract [x y]
+    (add x (multiply (make-poly (:var y) [(->Term -1 0)]) y)))
+
+  (multiply [x y]
+    (mul-poly x y))
+
+  (divide [x y]
+    (div-poly x y))
+
+  (equal [x y]
+    (and (same-variable?
+          (:var x)
+          (:var y))
+         (every?
+          (fn [[x y]] (equal x y))
+          (map vector x y))))
+
+  (=zero? [x]
+    (every? (comp =zero? :coeff) (:list x))))
+
+
+;; ex 2.89
+;; ex 2.90
+;; I am not going to implement other implementation for dense poly
+;; as the storage saved is not much or of concern
+;; but it will make operation like multiply easire to reuse
+;; beacuse those are just like matrix manipulations.
+
+;; ex 2.91
+(comment
+  (div-poly
+   (make-poly 'x (make-terms [[1 5] [-1 0]]))
+   (make-poly 'x (make-terms [[1 2] [-1 0]])))
+  ;;=> [{:var x, :list #{{:coeff 1, :power 3} {:coeff 1, :power 1}}}
+  ;;    {:var x, :list #{{:coeff 1, :power 1} {:coeff -1, :power 0}}}]
+  )
+
+;; ex 2.92
+;; this is okay to implement
+;; I have to have a replace table
+;; and whenever I encounter a value in replace table like y -> x^2
+;; I will replace so that all the calculations are done in the same variable
+;; that is find the bottom most value that it resolves to and once we are at the outer form
+;; just calculate and return the result
+;; it is very difficult to get the result back to the top level form
+
+
+;; ex 2.93
+;; Not going to modify the make-rat now.
+
+;; ex 2.94
+(defn gcd-terms [a b]
+  (if (empty? b)
+    a
+    (gcd-terms b (second (div-terms a b)))))
+
+(defn gcd-poly [p1 p2]
+  (if (same-variable? (:var p1) (:var p2))
+    (gcd-terms
+     (:list p1)
+     (:list p2))))
+
+(def p1 (make-poly 'x (make-terms [[4 1] [3 -1] [2 -2] [1 2]])))
+(def p2 (make-poly 'x (make-terms [[3 1] [1 -1]])))
+
+#_(gcd-poly p1 p2)
