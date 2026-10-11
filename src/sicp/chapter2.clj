@@ -2071,13 +2071,29 @@
 
 (defrecord Poly [var list])
 
+(declare add-terms)
+(declare term-list-sorted)
+
+(defn simplify-terms [args]
+  (->> args
+       (group-by :power)
+       (vals)
+       (map (fn [vs] (let [coeffs (map :coeff vs)
+                           s     (reduce + coeffs)
+                           p      (:power (first vs))]
+                       (->Term s p))))
+       (filter (comp not =zero? :coeff))))
+
+(comment
+  (simplify-terms [(->Term 10 1) (->Term 10 1)]))
+
 (defn term-list-sorted [& args]
   (apply sorted-set-by
          (fn [a b]
            (compare
             [(:power b) (:coeff b)]
             [(:power a) (:coeff a)]))
-         (filter (comp not =zero? :coeff) args)))
+         (simplify-terms args)))
 
 (defn make-poly [v l]
   (->Poly v l))
@@ -2085,11 +2101,15 @@
 (defn make-terms [terms]
   (apply term-list-sorted
          (map
-          (fn [[coeff pow]] (->Term coeff pow))
+          (fn [[coeff pow]] (->Term (* 1N coeff) pow))
           terms)))
 
 (defn adjoin-term [ts & args]
-  (apply conj ts (filter (comp not =zero? :coeff) args)))
+  (apply
+   term-list-sorted
+   (seq (clojure.set/union
+         ts
+         (apply term-list-sorted args)))))
 
 (defn add-terms [l1 l2]
   (cond (empty? l1) l2
@@ -2154,7 +2174,7 @@
               new-term (term-list-sorted (->Term new-c new-p))]
           (let [temp (sub-terms l1 (mul-terms new-term l2))
                 [q r] (div-terms temp l2)]
-            [(clojure.set/union q new-term) r]))))))
+            [(apply term-list-sorted (seq (clojure.set/union q new-term))) r]))))))
 
 (defn div-poly [p1 p2]
   (if (same-variable? (:var p1) (:var p2))
@@ -2226,13 +2246,55 @@
     a
     (gcd-terms b (second (div-terms a b)))))
 
+(defn integerizing-factor [p q]
+  (let [o1 (:power (first p))
+        o2 (:power (first q))
+        c (:coeff (first q))
+        k (* 1N (bigint (math/pow c (inc (- o1 o2)))))]
+    k))
+
+(defn pseudoremainder-terms [a b]
+  (if (empty? b)
+    a
+    (let [k (integerizing-factor a b)
+          k' (make-terms [[k 0]])
+          a' (mul-terms k' a)
+          res (pseudoremainder-terms b (second (div-terms a' b)))
+          r (map :coeff (seq res))
+          m (reduce * 1N r)
+          g (reduce #(sicp.chapter1/gcd-applicative %1 %2) m r)]
+      (apply term-list-sorted (map #(->Term (quot (:coeff %1) g) (:power %1)) (seq res))))))
+
+(comment
+  (div-terms (make-terms [[635688 -2]]) (make-terms [[635668 0]])))
+
 (defn gcd-poly [p1 p2]
   (if (same-variable? (:var p1) (:var p2))
-    (gcd-terms
+    (pseudoremainder-terms
      (:list p1)
      (:list p2))))
 
-(def p1 (make-poly 'x (make-terms [[4 1] [3 -1] [2 -2] [1 2]])))
-(def p2 (make-poly 'x (make-terms [[3 1] [1 -1]])))
+(def p1 (make-poly 'x (make-terms [[1 2] [-2 1] [1 0]])))
+(def p2 (make-poly 'x (make-terms [[11 2] [7 0]])))
+(def p3 (make-poly 'x (make-terms [[13 1] [5 0]])))
 
-#_(gcd-poly p1 p2)
+(def q1 (mul-poly p1 p2))
+(def q2 (mul-poly p1 p3))
+
+(def r1 (gcd-poly q1 q2))
+
+;; ex 2.95
+(comment
+  r1
+  ;;=> #{{:coeff 1N, :power 2} {:coeff -2N, :power 1} {:coeff 1N, :power 0}}
+  )
+
+(def pp1 (make-poly 'x (make-terms [[4 1] [3 -1] [2 -2] [1 2]])))
+(def pp2 (make-poly 'x (make-terms [[3 1] [1 -1]])))
+
+(def r2 (gcd-poly pp1 pp2))
+
+(comment
+  r2
+  ;;=> #{{:coeff 1N, :power -2}}
+  )
