@@ -1,4 +1,4 @@
-(ns sicp.chapter1
+(ns sicp.chapter1.core
   (:refer-clojure :exclude [abs]))
 
 (def pi 3.14159)

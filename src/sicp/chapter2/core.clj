@@ -1,7 +1,7 @@
-(ns sicp.chapter2
+(ns sicp.chapter2.core
   (:require [clojure.set :refer [union]]
-            [sicp.chapter1 :as chap1]
-            [sicp.pictureLang :as pict]
+            [sicp.chapter1.core :as chap1]
+            [sicp.chapter2.pictureLang :as pict]
             [clojure.math :as math]))
 
 (defn linear-combination [a b x y]

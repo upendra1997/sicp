@@ -1,6 +1,6 @@
 (ns sicp.chapter1-test
   (:require [clojure.test :refer :all]
-            [sicp.chapter1 :refer :all]
+            [sicp.chapter1.core :refer :all]
             [clojure.test.check.clojure-test :refer [defspec]]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]

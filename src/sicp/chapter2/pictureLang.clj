@@ -1,4 +1,4 @@
-(ns sicp.pictureLang
+(ns sicp.chapter2.pictureLang
   (:import [java.awt.image BufferedImage]
            [java.awt Graphics2D Color BasicStroke]
            [javax.imageio ImageIO]
