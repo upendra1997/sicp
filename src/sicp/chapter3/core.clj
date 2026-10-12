@@ -1,6 +1,6 @@
 (ns sicp.chapter3.core
   (:require
-    [clojure.math :as math]))
+   [clojure.math :as math]))
 
 ;; ex 3.1
 (defn make-accumulator [acct]
@@ -45,28 +45,53 @@
   (withdraw [this amount]
     (swap! (:balance this) #(- %1 amount)))
   (deposit [this amount]
-            (swap! (:balance this) #(+ %1 amount))))
+    (swap! (:balance this) #(+ %1 amount))))
 
 (defprotocol IPassword
   (unlock [this password]))
 
-(defrecord PasswordProtectedAccount [^Account account password]
+(defrecord PasswordProtectedAccount [^Account account password call-cops incorrect-password-count]
   IPassword
   (unlock [this p]
     (if (= p (:password this))
-      (:account this)
-      (reify IAccount
-        (withdraw [this amount] "Incorrect Password")
-        (deposit [this amount] "Incorrect Password")))))
+      (do
+        (reset! (:incorrect-password-count this) 0)
+        (:account this))
+      (do
+        (swap! (:incorrect-password-count this) inc)
+        (if (>= @(:incorrect-password-count this) 7)
+          (call-cops))
+        (reify IAccount
+          (withdraw [this amount] "Incorrect Password")
+          (deposit [this amount] "Incorrect Password"))))))
 
-(defn make-account [balance password]
-  (->PasswordProtectedAccount (->Account (atom balance)) password))
+(defn make-account [balance password call-cops]
+  (->PasswordProtectedAccount (->Account (atom balance)) password call-cops (atom 0)))
 
 ;; ex 3.3
-(def account (make-account 100 "secret-password"))
+(def account (make-account 100 "secret-password" (fn [] (prn "called the cops"))))
 
 (.. account (unlock "secret-password") (withdraw 40))
 ;;=> 60
 
 (.. account (unlock "wrong-secret-password") (deposit 40))
+;;=> "Incorrect Password"
+
+(.. account (unlock "wrong-secret-password") (deposit 40))
+;;=> "Incorrect Password"
+
+(.. account (unlock "wrong-secret-password") (deposit 40))
+;;=> "Incorrect Password"
+
+(.. account (unlock "wrong-secret-password") (deposit 40))
+;;=> "Incorrect Password"
+
+(.. account (unlock "wrong-secret-password") (deposit 40))
+;;=> "Incorrect Password"
+
+(.. account (unlock "wrong-secret-password") (deposit 40))
+;;=> "Incorrect Password"
+
+(.. account (unlock "wrong-secret-password") (deposit 40))
+;; "called the cops"
 ;;=> "Incorrect Password"
